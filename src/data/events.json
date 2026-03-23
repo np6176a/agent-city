@@ -1,0 +1,52 @@
+{
+  "teachingCards": [
+    {
+      "id": "tc_no_tools",
+      "title": "Rue Needs Her Tools",
+      "concept": "tool_use",
+      "explanation": "AI agents need access to external tools to look up information, query databases, and verify facts. Without tools, they're forced to guess — and guessing leads to errors.",
+      "whatWentWrong": "The agent had no tools enabled, so it couldn't look up the information it needed and made incorrect assumptions.",
+      "correctConfig": { "tools": true, "memory": false, "autonomy": "medium" }
+    },
+    {
+      "id": "tc_no_memory",
+      "title": "Axel Forgot the Plan",
+      "concept": "context_memory",
+      "explanation": "Memory lets agents retain context across steps. Multi-step tasks require remembering what happened before — without memory, each step starts from scratch.",
+      "whatWentWrong": "The agent had no memory enabled, so it forgot the earlier steps of its plan and couldn't complete the multi-step task.",
+      "correctConfig": { "tools": false, "memory": true, "autonomy": "medium" }
+    },
+    {
+      "id": "tc_high_autonomy",
+      "title": "Sentry Went Rogue",
+      "concept": "guardrails",
+      "explanation": "High autonomy means the agent makes decisions without human oversight. For safety-critical tasks, this can lead to dangerous actions that bypass important checks.",
+      "whatWentWrong": "The agent was given high autonomy on a security-critical task and overrode safety protocols without human approval.",
+      "correctConfig": { "tools": true, "memory": false, "autonomy": "low" }
+    },
+    {
+      "id": "tc_wrong_agent",
+      "title": "Wrong Bot for the Job",
+      "concept": "task_specialization",
+      "explanation": "Different agents are designed for different tasks. Assigning an agent to a task outside its specialty means it lacks the right training and approach for the job.",
+      "whatWentWrong": "This agent wasn't suited for this building type — its strengths lie elsewhere.",
+      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+    },
+    {
+      "id": "tc_poor_fit",
+      "title": "Close, But Not Quite",
+      "concept": "agent_architecture",
+      "explanation": "A well-functioning AI agent needs the right combination of capabilities: the right tools, memory when needed, and an appropriate level of autonomy for the task.",
+      "whatWentWrong": "The overall configuration wasn't well-matched to the task requirements, leading to suboptimal performance.",
+      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+    },
+    {
+      "id": "tc_success",
+      "title": "Nailed It!",
+      "concept": "reinforcement",
+      "explanation": "This configuration worked because the right agent was paired with the right building, and the tools, memory, and autonomy settings matched the task requirements.",
+      "whatWentWrong": "",
+      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+    }
+  ]
+}

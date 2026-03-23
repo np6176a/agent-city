@@ -1,0 +1,32 @@
+[
+  {
+    "id": "axel",
+    "name": "Axel",
+    "role": "Logistics Coordinator",
+    "teaches": "Memory & context retention",
+    "color": "#A78BFA",
+    "portrait": "/assets/axel.png",
+    "strengths": ["transit"],
+    "weakness": ["security"]
+  },
+  {
+    "id": "rue",
+    "name": "Rue",
+    "role": "Research Librarian",
+    "teaches": "Tool use & RAG",
+    "color": "#67D4E8",
+    "portrait": "/assets/rue.png",
+    "strengths": ["library"],
+    "weakness": ["transit"]
+  },
+  {
+    "id": "sentry",
+    "name": "Sentry",
+    "role": "Security Analyst",
+    "teaches": "Guardrails & oversight",
+    "color": "#FF8A80",
+    "portrait": "/assets/sentry.png",
+    "strengths": ["security"],
+    "weakness": ["library"]
+  }
+]
