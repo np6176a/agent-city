@@ -6,12 +6,12 @@ export function StartScreen({ onStart }: StartScreenProps) {
   return (
     <div className="fixed inset-0 z-40 flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--bg-dark)' }}>
       <div className="flex flex-col items-center gap-8 max-w-lg text-center px-6">
-        {/* Agent portraits row */}
-        <div className="flex items-end gap-4 mb-2">
-          <img src="/assets/rue.png" alt="Rue" className="w-20 h-20 object-contain drop-shadow-lg" />
-          <img src="/assets/axel.png" alt="Axel" className="w-24 h-24 object-contain drop-shadow-lg" />
-          <img src="/assets/sentry.png" alt="Sentry" className="w-20 h-20 object-contain drop-shadow-lg" />
-        </div>
+        {/* Group portrait */}
+        <img
+          src="/assets/group.png"
+          alt="Axel, Rue, and Sentry in Agent City"
+          className="w-72 h-auto object-contain drop-shadow-2xl rounded-2xl"
+        />
 
         <div>
           <h1 className="font-headline text-6xl font-bold tracking-tight">
