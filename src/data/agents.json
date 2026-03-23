@@ -2,9 +2,9 @@
   {
     "id": "axel",
     "name": "Axel",
-    "role": "Logistics Coordinator",
-    "teaches": "Memory & context retention",
-    "color": "#A78BFA",
+    "role": "The Planner",
+    "teaches": "Planning & Task Decomposition",
+    "color": "#5EE8B0",
     "portrait": "/assets/axel.png",
     "strengths": ["transit"],
     "weakness": ["security"]
@@ -12,8 +12,8 @@
   {
     "id": "rue",
     "name": "Rue",
-    "role": "Research Librarian",
-    "teaches": "Tool use & RAG",
+    "role": "The Researcher",
+    "teaches": "Retrieval & Tool Use",
     "color": "#67D4E8",
     "portrait": "/assets/rue.png",
     "strengths": ["library"],
@@ -22,8 +22,8 @@
   {
     "id": "sentry",
     "name": "Sentry",
-    "role": "Security Analyst",
-    "teaches": "Guardrails & oversight",
+    "role": "The Guardian",
+    "teaches": "Guardrails & Oversight",
     "color": "#FF8A80",
     "portrait": "/assets/sentry.png",
     "strengths": ["security"],

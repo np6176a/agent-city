@@ -14,19 +14,22 @@ export function HUD() {
   if (phase === 'start' || phase === 'end') return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-3 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700">
-      <div className="flex items-center gap-6 text-sm">
+    <div
+      className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-3 backdrop-blur-sm border-b border-gray-700/50"
+      style={{ backgroundColor: 'rgba(15, 15, 26, 0.85)' }}
+    >
+      <div className="flex items-center gap-6 text-sm font-headline">
         <span className="text-gray-400">
-          Turn <span className="text-white font-bold">{turn}</span>/8
+          Turn <span className="font-bold" style={{ color: 'var(--cyan)' }}>{turn}</span>/8
         </span>
         <span className="text-gray-400">
-          Score <span className="text-emerald-400 font-bold">{score}</span>
+          Score <span className="font-bold" style={{ color: 'var(--mint)' }}>{score}</span>
         </span>
         <span className="text-gray-400">
-          Budget <span className="text-amber-400 font-bold">${budget}</span>
+          Budget <span className="font-bold" style={{ color: 'var(--yellow)' }}>${budget}</span>
         </span>
       </div>
-      <div className="text-sm font-medium text-violet-300">
+      <div className="text-sm font-headline font-semibold" style={{ color: 'var(--violet)' }}>
         {PHASE_LABELS[phase] ?? ''}
       </div>
     </div>

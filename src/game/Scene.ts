@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export function createScene(): THREE.Scene {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#1a1a2e');
+  scene.background = new THREE.Color('#0F0F1A');
 
   // Ambient light - warm white
   const ambient = new THREE.AmbientLight(0xfff5e6, 0.4);

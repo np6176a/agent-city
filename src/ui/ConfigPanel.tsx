@@ -15,30 +15,45 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
   if (phase !== 'configure') return null;
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/50">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-80 flex flex-col gap-5">
-        <h3 className="text-white text-lg font-bold text-center">
+    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60">
+      <div
+        className="border rounded-2xl p-6 w-80 flex flex-col gap-5"
+        style={{
+          backgroundColor: 'var(--bg-panel)',
+          borderColor: 'rgba(167, 139, 250, 0.3)',
+          boxShadow: '0 0 40px rgba(167, 139, 250, 0.1)',
+        }}
+      >
+        <h3 className="font-headline text-white text-lg font-bold text-center">
           Configure Agent
         </h3>
 
         <label className="flex items-center justify-between text-sm text-gray-300">
           <span>Tools Access</span>
-          <input
-            type="checkbox"
-            checked={tools}
-            onChange={(e) => setTools(e.target.checked)}
-            className="w-5 h-5 accent-violet-500"
-          />
+          <div
+            className="w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors"
+            style={{ backgroundColor: tools ? 'var(--mint)' : '#3d3d5c' }}
+            onClick={() => setTools(!tools)}
+          >
+            <div
+              className="w-4 h-4 rounded-full bg-white shadow transition-transform"
+              style={{ transform: tools ? 'translateX(24px)' : 'translateX(0)' }}
+            />
+          </div>
         </label>
 
         <label className="flex items-center justify-between text-sm text-gray-300">
           <span>Memory</span>
-          <input
-            type="checkbox"
-            checked={memory}
-            onChange={(e) => setMemory(e.target.checked)}
-            className="w-5 h-5 accent-violet-500"
-          />
+          <div
+            className="w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors"
+            style={{ backgroundColor: memory ? 'var(--cyan)' : '#3d3d5c' }}
+            onClick={() => setMemory(!memory)}
+          >
+            <div
+              className="w-4 h-4 rounded-full bg-white shadow transition-transform"
+              style={{ transform: memory ? 'translateX(24px)' : 'translateX(0)' }}
+            />
+          </div>
         </label>
 
         <div className="flex flex-col gap-2">
@@ -48,8 +63,12 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
               <button
                 key={level}
                 onClick={() => setAutonomy(level)}
-                className={`flex-1 py-2 rounded-lg text-xs font-medium capitalize transition-all
-                  ${autonomy === level ? 'bg-violet-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                className="flex-1 py-2 rounded-xl text-xs font-headline font-semibold capitalize transition-all"
+                style={{
+                  backgroundColor: autonomy === level ? 'var(--violet)' : '#2d2d44',
+                  color: autonomy === level ? '#fff' : '#888',
+                  boxShadow: autonomy === level ? '0 0 12px rgba(167, 139, 250, 0.3)' : 'none',
+                }}
               >
                 {level}
               </button>
@@ -59,7 +78,12 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
 
         <button
           onClick={() => onConfirm({ tools, memory, autonomy })}
-          className="mt-2 py-2 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors"
+          className="mt-2 py-2.5 rounded-2xl text-white font-headline font-bold transition-all hover:scale-105"
+          style={{
+            backgroundColor: 'var(--mint)',
+            color: '#0F0F1A',
+            boxShadow: '0 0 16px rgba(94, 232, 176, 0.3)',
+          }}
         >
           Confirm & Resolve
         </button>

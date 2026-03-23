@@ -6,5 +6,21 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Calibri Light', 'Calibri', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.font-headline {
+  font-family: 'Trebuchet MS', 'Trebuchet', system-ui, sans-serif;
+}
+
+/* Brand color utilities */
+:root {
+  --mint: #5EE8B0;
+  --violet: #A78BFA;
+  --cyan: #67D4E8;
+  --coral: #FF8A80;
+  --yellow: #FFD166;
+  --bg-dark: #0F0F1A;
+  --bg-panel: #1A1A2E;
 }
