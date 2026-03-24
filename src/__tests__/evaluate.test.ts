@@ -168,9 +168,9 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'hospital',
         agentId: 'axel',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { tools: false, memory: false, autonomy: 'low' },
       });
-      // Axel: no strength or weakness for hospital. score: 50 - 15 = 35 < 50
+      // Axel: no strength or weakness for hospital. score: 50 + 0 (no config bonus) - 15 = 35 < 50
       const event = evaluateTurn(building, axel);
       expect(event.type).toBe('breakdown');
       expect(event.cause).toBe('poor_fit');
@@ -180,17 +180,17 @@ describe('evaluateTurn', () => {
 
   describe('repair mode', () => {
     it('uses reduced variance (±5) in repair mode', () => {
-      vi.spyOn(Math, 'random').mockReturnValue(0); // variance = -5 (repair) vs -15 (normal)
+      vi.spyOn(Math, 'random').mockReturnValue(0); // variance = -5 (repair)
       const building = makeBuilding({
         type: 'hospital',
         agentId: 'axel',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { tools: false, memory: false, autonomy: 'low' },
       });
-      // score: 50 - 5 = 45 < 50 → fail in repair mode too
+      // score: 50 + 0 (no config bonus) - 5 = 45 < 50 → fail
       const repairEvent = evaluateTurn(building, axel, true);
       expect(repairEvent.isRepair).toBe(true);
+      expect(repairEvent.type).toBe('breakdown');
 
-      // But with random=0.25: variance = -5 + floor(0.25*10) = -5+2 = -3 → score=47 < 50
       // With random=0.5: variance = 0 → score=50 ≥ 50 → success
       vi.spyOn(Math, 'random').mockReturnValue(0.5);
       const repairEvent2 = evaluateTurn(building, axel, true);
@@ -213,9 +213,9 @@ describe('evaluateTurn', () => {
       const event7 = evaluateTurn(libraryBuilding, makeAgent(), false, 7);
       expect(event7.type).toBe('success');
 
-      // Axel on hospital (no match): score 50 + 0 = 50 < 60 → fail on turn 7
+      // Axel on hospital (no match, no config bonus): score 50 + 0 = 50 < 60 → fail on turn 7
       const event7fail = evaluateTurn(
-        makeBuilding({ type: 'hospital', config: { tools: true, memory: true, autonomy: 'medium' } }),
+        makeBuilding({ type: 'hospital', config: { tools: false, memory: false, autonomy: 'low' } }),
         axel,
         false,
         7,
@@ -250,8 +250,9 @@ describe('evaluateTurn', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0);
       const building = makeBuilding({
         type: 'hospital',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { tools: false, memory: false, autonomy: 'low' },
       });
+      // score: 50 + 0 (no config bonus) - 15 = 35 < 50 → poor_fit
       const event = evaluateTurn(building, axel);
       expect(event.severity).toBe('minor');
       vi.restoreAllMocks();

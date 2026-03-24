@@ -290,7 +290,7 @@ export default function App() {
       <div className="pointer-events-none fixed inset-0 z-10 [&>*]:pointer-events-auto">
         {phase === 'start' && <StartScreen onStart={startGame} />}
         {phase === 'end' && <EndScreen onRestart={handleRestart} />}
-        <HUD />
+        <HUD onReset={handleRestart} />
         <BuildPanel />
         <AgentSelect />
         <ConfigPanel onConfirm={handleConfigConfirm} />
