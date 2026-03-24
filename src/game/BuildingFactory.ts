@@ -12,19 +12,28 @@ const BUILDING_CONFIGS: Record<
       // Cross on top
       const crossH = new THREE.Mesh(
         new THREE.BoxGeometry(0.4, 0.08, 0.12),
-        new THREE.MeshStandardMaterial({ color: 0xffffff }),
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.2,
+        }),
       );
       crossH.position.set(0, 1.24, 0);
+      crossH.userData.animate = 'pulse';
       group.add(crossH);
 
       const crossV = new THREE.Mesh(
         new THREE.BoxGeometry(0.12, 0.08, 0.4),
-        new THREE.MeshStandardMaterial({ color: 0xffffff }),
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.2,
+        }),
       );
       crossV.position.set(0, 1.24, 0);
+      crossV.userData.animate = 'pulse';
       group.add(crossV);
 
-      // Window insets
       addWindows(group, 0x3cb88a, 1.2);
     },
   },
@@ -42,6 +51,8 @@ const BUILDING_CONFIGS: Record<
         }),
       );
       sphere.position.set(0, 0.96, 0);
+      sphere.userData.animate = 'float';
+      sphere.userData.baseY = 0.96;
       group.add(sphere);
 
       addWindows(group, 0x4aabb8, 0.9);
@@ -66,12 +77,13 @@ const BUILDING_CONFIGS: Record<
         group.add(pillar);
       }
 
-      // Flat roof
+      // Flat roof - slow rotation
       const roof = new THREE.Mesh(
         new THREE.BoxGeometry(0.85, 0.05, 0.85),
         new THREE.MeshStandardMaterial({ color: 0x8b6fe0 }),
       );
       roof.position.set(0, 1.0, 0);
+      roof.userData.animate = 'rotate';
       group.add(roof);
     },
   },
@@ -92,11 +104,15 @@ const BUILDING_CONFIGS: Record<
         }),
       );
       cone.position.set(0, 1.72, 0);
+      cone.userData.animate = 'float';
+      cone.userData.baseY = 1.72;
       group.add(cone);
 
       // Point light for beacon glow
       const light = new THREE.PointLight(0xff4444, 0.5, 3);
       light.position.set(0, 1.8, 0);
+      light.userData.animate = 'light_pulse';
+      light.userData.baseY = 1.8;
       group.add(light);
     },
   },
@@ -123,8 +139,9 @@ function addWindows(
   ];
 
   for (const pos of positions) {
-    const win = new THREE.Mesh(windowGeo, windowMat);
+    const win = new THREE.Mesh(windowGeo, windowMat.clone());
     win.position.set(pos.x, yPos, pos.z);
+    win.userData.animate = 'breathe';
     group.add(win);
   }
 }
@@ -159,4 +176,53 @@ export function createBuildingMesh(
   group.userData = { type: 'building', buildingType: type, col, row };
 
   return group;
+}
+
+/**
+ * Animate all building idle effects. Call once per frame with elapsed time.
+ */
+export function animateBuildings(scene: THREE.Scene, time: number): void {
+  scene.traverse((obj) => {
+    const anim = obj.userData?.animate;
+    if (!anim) return;
+
+    switch (anim) {
+      // Sine wave float on beacon lights (library sphere, security cone)
+      case 'float': {
+        const baseY = obj.userData.baseY as number;
+        obj.position.y = baseY + Math.sin(time * 2) * 0.04;
+        break;
+      }
+
+      // Gentle emissive pulse on hospital cross
+      case 'pulse': {
+        const mesh = obj as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.emissiveIntensity = 0.2 + Math.sin(time * 3) * 0.15;
+        break;
+      }
+
+      // Slow Y rotation on transit roof
+      case 'rotate': {
+        obj.rotation.y = time * 0.3;
+        break;
+      }
+
+      // Breathing window glow
+      case 'breathe': {
+        const mesh = obj as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.emissiveIntensity = 0.25 + Math.sin(time * 1.5 + obj.position.x * 5) * 0.15;
+        break;
+      }
+
+      // Point light intensity pulse (security beacon)
+      case 'light_pulse': {
+        const light = obj as THREE.PointLight;
+        light.intensity = 0.4 + Math.sin(time * 2) * 0.2;
+        light.position.y = (obj.userData.baseY as number) + Math.sin(time * 2) * 0.04;
+        break;
+      }
+    }
+  });
 }

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { createScene } from './game/Scene';
 import { createCamera, setupCameraControls } from './game/Camera';
 import { createGrid, highlightTile } from './game/Grid';
-import { createBuildingMesh } from './game/BuildingFactory';
+import { createBuildingMesh, animateBuildings } from './game/BuildingFactory';
 import { InputHandler } from './game/InputHandler';
 import { evaluateTurn } from './game/Evaluate';
 import { useGameStore, BUILDING_COSTS } from './state/gameStore';
@@ -121,9 +121,11 @@ export default function App() {
       },
     });
 
+    const clock = new THREE.Clock();
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
+      animateBuildings(scene, clock.getElapsedTime());
       renderer.render(scene, camera);
     };
     animate();
