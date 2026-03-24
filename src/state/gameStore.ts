@@ -17,6 +17,7 @@ interface GameState {
   totalDiagnoses: number;
   repairsAttempted: number;
   perfectConfigs: number;
+  turnsPlayed: number;
 
   setPhase: (phase: GamePhase) => void;
   selectBuildingType: (type: BuildingType | null) => void;
@@ -33,6 +34,7 @@ interface GameState {
   recordDiagnosis: (correct: boolean) => void;
   incrementRepairs: () => void;
   incrementPerfectConfigs: () => void;
+  incrementTurnsPlayed: () => void;
   startGame: () => void;
   resetGame: () => void;
 }
@@ -57,7 +59,8 @@ export const BUILDING_COSTS: Record<BuildingType, number> = {
 const MIN_BUILDING_COST = 100;
 
 export function routeNextPhase(state: GameState): GamePhase {
-  if (state.turn >= 8) return 'end';
+  // Game over after 8 turns have been played
+  if (state.turn > 8) return 'end';
 
   if (state.budget >= MIN_BUILDING_COST) {
     return 'place';
@@ -89,6 +92,7 @@ export const useGameStore = create<GameState>((set) => ({
   totalDiagnoses: 0,
   repairsAttempted: 0,
   perfectConfigs: 0,
+  turnsPlayed: 0,
 
   setPhase: (phase) => set({ phase }),
 
@@ -117,7 +121,8 @@ export const useGameStore = create<GameState>((set) => ({
       ),
     })),
 
-  addScore: (points) => set((state) => ({ score: state.score + points })),
+  addScore: (points) =>
+    set((state) => ({ score: Math.max(0, state.score + points) })),
 
   deductBudget: (amount) =>
     set((state) => ({ budget: state.budget - amount })),
@@ -129,12 +134,11 @@ export const useGameStore = create<GameState>((set) => ({
       const nextTurn = state.turn + 1;
       const nextState = { ...state, turn: nextTurn };
       const nextPhase = routeNextPhase(nextState);
-      const isEarlyEnd =
-        nextPhase === 'end' && nextTurn < 8;
+      const isEarlyEnd = nextPhase === 'end' && nextTurn <= 8;
       return {
         turn: nextTurn,
         phase: nextPhase,
-        isEarlyEnd,
+        isEarlyEnd: isEarlyEnd || state.isEarlyEnd,
       };
     }),
 
@@ -157,6 +161,9 @@ export const useGameStore = create<GameState>((set) => ({
   incrementPerfectConfigs: () =>
     set((state) => ({ perfectConfigs: state.perfectConfigs + 1 })),
 
+  incrementTurnsPlayed: () =>
+    set((state) => ({ turnsPlayed: state.turnsPlayed + 1 })),
+
   startGame: () => set({ phase: 'place' }),
 
   resetGame: () =>
@@ -176,5 +183,6 @@ export const useGameStore = create<GameState>((set) => ({
       totalDiagnoses: 0,
       repairsAttempted: 0,
       perfectConfigs: 0,
+      turnsPlayed: 0,
     }),
 }));

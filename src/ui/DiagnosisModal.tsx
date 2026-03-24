@@ -25,6 +25,7 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
   const isSuccess = currentEvent.type === 'success';
   const agent = agents.find((a) => a.id === currentEvent.agentId);
   const options = (card.diagnosisOptions ?? []) as DiagnosisOption[];
+  const hasOptions = !isSuccess && options.length > 0;
 
   const handleOptionSelect = (optionId: string) => {
     if (hasAnswered) return;
@@ -35,6 +36,9 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
   const isCorrect = selectedOption
     ? options.find((o) => o.id === selectedOption)?.correct ?? false
     : false;
+
+  // Show teaching content when: success, no options to answer, or already answered
+  const showTeaching = isSuccess || !hasOptions || hasAnswered;
 
   const handleContinue = () => {
     setSelectedOption(null);
@@ -77,8 +81,8 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
           {isSuccess ? card.explanation : card.whatWentWrong}
         </p>
 
-        {/* Diagnosis multiple choice (failure only) */}
-        {!isSuccess && options.length > 0 && !hasAnswered && (
+        {/* Diagnosis multiple choice (failure with options, not yet answered) */}
+        {hasOptions && !hasAnswered && (
           <div className="flex flex-col gap-2">
             <p className="text-xs font-headline font-bold uppercase tracking-wider" style={{ color: 'var(--yellow)' }}>
               What should we fix?
@@ -100,8 +104,8 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
           </div>
         )}
 
-        {/* Diagnosis result */}
-        {!isSuccess && hasAnswered && (
+        {/* Diagnosis result (after answering) */}
+        {hasOptions && hasAnswered && (
           <div className="flex flex-col gap-2">
             <p className="text-xs font-headline font-bold uppercase tracking-wider" style={{ color: 'var(--yellow)' }}>
               What should we fix?
@@ -149,15 +153,15 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
           </div>
         )}
 
-        {/* Teaching explanation (shown after diagnosis or on success) */}
-        {(isSuccess || hasAnswered) && (
+        {/* Teaching explanation + Continue button */}
+        {showTeaching && (
           <>
             <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)' }}>
               <p className="text-xs mb-2 font-headline font-bold uppercase tracking-wider" style={{ color: 'var(--violet)' }}>
                 {isSuccess ? 'Why it worked' : 'The concept'}
               </p>
               <p className="text-gray-300 text-sm leading-relaxed">
-                {isSuccess ? card.explanation : card.explanation}
+                {card.explanation}
               </p>
             </div>
 

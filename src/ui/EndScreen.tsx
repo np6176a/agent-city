@@ -26,7 +26,7 @@ export function EndScreen({ onRestart }: EndScreenProps) {
   const {
     score,
     buildings,
-    turn,
+    turnsPlayed,
     isEarlyEnd,
     correctDiagnoses,
     totalDiagnoses,
@@ -74,7 +74,7 @@ export function EndScreen({ onRestart }: EndScreenProps) {
           </h1>
           {isEarlyEnd && (
             <p className="text-gray-400 text-sm mt-2">
-              But look at what you built in {turn - 1} turns.
+              But look at what you built in {turnsPlayed} turn{turnsPlayed !== 1 ? 's' : ''}.
             </p>
           )}
         </div>

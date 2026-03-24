@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { useAgentStore } from '../state/agentStore';
 import { useEventStore } from '../state/eventStore';
@@ -18,7 +18,18 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
   const [memory, setMemory] = useState(false);
   const [autonomy, setAutonomy] = useState<AutonomyLevel>('medium');
 
-  if (phase !== 'configure' && phase !== 'repair_configure') return null;
+  const isVisible = phase === 'configure' || phase === 'repair_configure';
+
+  // Reset toggle state every time the panel becomes visible
+  useEffect(() => {
+    if (isVisible) {
+      setTools(false);
+      setMemory(false);
+      setAutonomy('medium');
+    }
+  }, [isVisible]);
+
+  if (!isVisible) return null;
 
   const isRepair = phase === 'repair_configure';
 
@@ -43,6 +54,7 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
     no_memory: 'had no memory and forgot the multi-step plan',
     high_autonomy_no_guardrails: 'had too much autonomy and overrode safety protocols',
     poor_fit: 'had a configuration that didn\'t match the task requirements',
+    wrong_agent: 'wasn\'t the right fit for this type of building',
   };
 
   return (

@@ -6,7 +6,7 @@ import { createGrid, highlightTile } from './game/Grid';
 import { createBuildingMesh } from './game/BuildingFactory';
 import { InputHandler } from './game/InputHandler';
 import { evaluateTurn } from './game/Evaluate';
-import { useGameStore, BUILDING_COSTS, routeNextPhase } from './state/gameStore';
+import { useGameStore, BUILDING_COSTS } from './state/gameStore';
 import { useAgentStore } from './state/agentStore';
 import { useEventStore } from './state/eventStore';
 import { HUD } from './ui/HUD';
@@ -179,19 +179,23 @@ export default function App() {
     // Update building config
     useGameStore.getState().updateBuilding(buildingId, { config });
     useGameStore.getState().setPhase('resolve');
+    useGameStore.getState().incrementTurnsPlayed();
+
+    if (isRepair) {
+      useGameStore.getState().incrementRepairs();
+    }
 
     const updatedBuildings = useGameStore.getState().buildings;
     const building = updatedBuildings.find((b) => b.id === buildingId)!;
     const agents = useAgentStore.getState().agents;
     const agent = agents.find((a) => a.id === building.agentId)!;
 
-    const event = evaluateTurn(building, agent, isRepair);
+    const event = evaluateTurn(building, agent, isRepair, state.turn);
 
     if (event.type === 'success') {
       if (isRepair) {
         useGameStore.getState().addScore(75);
         useGameStore.getState().addBudget(25);
-        useGameStore.getState().incrementRepairs();
       } else {
         useGameStore.getState().addScore(100);
         useGameStore.getState().addBudget(50);
@@ -242,32 +246,16 @@ export default function App() {
 
     useEventStore.getState().clearEvent();
 
-    // Determine if this was a repair turn
+    // Update consecutive repair counter
     const wasRepair = currentEvent?.isRepair ?? false;
-
     if (wasRepair) {
       useGameStore.getState().incrementConsecutiveRepairs();
     } else {
       useGameStore.getState().resetConsecutiveRepairs();
     }
 
-    // Route to next phase
-    const updatedState = useGameStore.getState();
-    const nextPhase = routeNextPhase(updatedState);
-
-    if (nextPhase === 'end') {
-      const isEarly = updatedState.turn < 8;
-      useGameStore.getState().setPhase('end');
-      if (isEarly) {
-        // Mark as early end (set via advanceTurn normally, but we handle it here for repair paths)
-        useGameStore.setState({ isEarlyEnd: true });
-      }
-    } else if (nextPhase === 'repair_select') {
-      useGameStore.getState().setPhase('repair_select');
-      useGameStore.getState().advanceTurn();
-    } else {
-      useGameStore.getState().advanceTurn();
-    }
+    // Route to next phase using advanceTurn which handles all routing
+    useGameStore.getState().advanceTurn();
   }, []);
 
   const handleRestart = useCallback(() => {

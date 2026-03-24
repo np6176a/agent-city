@@ -1,11 +1,16 @@
 import type { Agent, Building, BuildingType, FailureCause, GameEvent } from '../types';
 
-function needsTools(_buildingType: BuildingType, agent: Agent): boolean {
-  return agent.name === 'Rue' || agent.name === 'Sentry';
+function needsTools(buildingType: BuildingType, agent: Agent): boolean {
+  // Rue always needs tools; Sentry needs tools for security
+  if (agent.name === 'Rue') return true;
+  if (agent.name === 'Sentry' && buildingType === 'security') return true;
+  return false;
 }
 
-function needsMemory(_buildingType: BuildingType, agent: Agent): boolean {
-  return agent.name === 'Axel';
+function needsMemory(buildingType: BuildingType, agent: Agent): boolean {
+  // Axel needs memory for transit (multi-step logistics)
+  if (agent.name === 'Axel' && buildingType === 'transit') return true;
+  return false;
 }
 
 function failEvent(
@@ -55,12 +60,18 @@ export function evaluateTurn(
   building: Building,
   agent: Agent,
   isRepair = false,
+  currentTurn = 1,
 ): GameEvent {
   let score = 50;
 
   // Agent fit bonus/penalty
   if (agent.strengths.includes(building.type)) score += 25;
   if (agent.weakness.includes(building.type)) score -= 30;
+
+  // Wrong agent: weakness match with a significant penalty
+  if (agent.weakness.includes(building.type) && score < 30) {
+    return failEvent(building, agent, 'wrong_agent', isRepair);
+  }
 
   const config = building.config;
 
@@ -84,7 +95,7 @@ export function evaluateTurn(
   score += Math.floor(Math.random() * variance * 2) - variance;
 
   // Turns 7-8: harder threshold
-  const threshold = building.turnsActive >= 6 ? 60 : 50;
+  const threshold = currentTurn >= 7 ? 60 : 50;
 
   return score >= threshold
     ? successEvent(building, agent, isRepair)
