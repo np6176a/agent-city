@@ -10,6 +10,14 @@ interface GameState {
   buildings: Building[];
   selectedBuildingType: BuildingType | null;
   selectedTile: { col: number; row: number } | null;
+  repairBuildingId: string | null;
+  consecutiveRepairs: number;
+  isEarlyEnd: boolean;
+  correctDiagnoses: number;
+  totalDiagnoses: number;
+  repairsAttempted: number;
+  perfectConfigs: number;
+  turnsPlayed: number;
 
   setPhase: (phase: GamePhase) => void;
   selectBuildingType: (type: BuildingType | null) => void;
@@ -19,7 +27,14 @@ interface GameState {
   addScore: (points: number) => void;
   deductBudget: (amount: number) => void;
   addBudget: (amount: number) => void;
-  nextTurn: () => void;
+  advanceTurn: () => void;
+  setRepairBuilding: (id: string | null) => void;
+  incrementConsecutiveRepairs: () => void;
+  resetConsecutiveRepairs: () => void;
+  recordDiagnosis: (correct: boolean) => void;
+  incrementRepairs: () => void;
+  incrementPerfectConfigs: () => void;
+  incrementTurnsPlayed: () => void;
   startGame: () => void;
   resetGame: () => void;
 }
@@ -41,6 +56,26 @@ export const BUILDING_COSTS: Record<BuildingType, number> = {
   security: 175,
 };
 
+const MIN_BUILDING_COST = 100;
+
+export function routeNextPhase(state: GameState): GamePhase {
+  // Game over after 8 turns have been played
+  if (state.turn > 8) return 'end';
+
+  if (state.budget >= MIN_BUILDING_COST) {
+    return 'place';
+  }
+
+  const hasBroken = state.buildings.some((b) => b.status === 'broken');
+
+  if (hasBroken && state.consecutiveRepairs < 2) {
+    return 'repair_select';
+  }
+
+  // Early end with grace
+  return 'end';
+}
+
 export const useGameStore = create<GameState>((set) => ({
   turn: 1,
   score: 0,
@@ -50,6 +85,14 @@ export const useGameStore = create<GameState>((set) => ({
   buildings: [],
   selectedBuildingType: null,
   selectedTile: null,
+  repairBuildingId: null,
+  consecutiveRepairs: 0,
+  isEarlyEnd: false,
+  correctDiagnoses: 0,
+  totalDiagnoses: 0,
+  repairsAttempted: 0,
+  perfectConfigs: 0,
+  turnsPlayed: 0,
 
   setPhase: (phase) => set({ phase }),
 
@@ -78,18 +121,48 @@ export const useGameStore = create<GameState>((set) => ({
       ),
     })),
 
-  addScore: (points) => set((state) => ({ score: state.score + points })),
+  addScore: (points) =>
+    set((state) => ({ score: Math.max(0, state.score + points) })),
 
   deductBudget: (amount) =>
     set((state) => ({ budget: state.budget - amount })),
 
   addBudget: (amount) => set((state) => ({ budget: state.budget + amount })),
 
-  nextTurn: () =>
+  advanceTurn: () =>
+    set((state) => {
+      const nextTurn = state.turn + 1;
+      const nextState = { ...state, turn: nextTurn };
+      const nextPhase = routeNextPhase(nextState);
+      const isEarlyEnd = nextPhase === 'end' && nextTurn <= 8;
+      return {
+        turn: nextTurn,
+        phase: nextPhase,
+        isEarlyEnd: isEarlyEnd || state.isEarlyEnd,
+      };
+    }),
+
+  setRepairBuilding: (id) => set({ repairBuildingId: id }),
+
+  incrementConsecutiveRepairs: () =>
+    set((state) => ({ consecutiveRepairs: state.consecutiveRepairs + 1 })),
+
+  resetConsecutiveRepairs: () => set({ consecutiveRepairs: 0 }),
+
+  recordDiagnosis: (correct) =>
     set((state) => ({
-      turn: state.turn + 1,
-      phase: state.turn >= 8 ? 'end' : 'place',
+      correctDiagnoses: state.correctDiagnoses + (correct ? 1 : 0),
+      totalDiagnoses: state.totalDiagnoses + 1,
     })),
+
+  incrementRepairs: () =>
+    set((state) => ({ repairsAttempted: state.repairsAttempted + 1 })),
+
+  incrementPerfectConfigs: () =>
+    set((state) => ({ perfectConfigs: state.perfectConfigs + 1 })),
+
+  incrementTurnsPlayed: () =>
+    set((state) => ({ turnsPlayed: state.turnsPlayed + 1 })),
 
   startGame: () => set({ phase: 'place' }),
 
@@ -103,5 +176,13 @@ export const useGameStore = create<GameState>((set) => ({
       buildings: [],
       selectedBuildingType: null,
       selectedTile: null,
+      repairBuildingId: null,
+      consecutiveRepairs: 0,
+      isEarlyEnd: false,
+      correctDiagnoses: 0,
+      totalDiagnoses: 0,
+      repairsAttempted: 0,
+      perfectConfigs: 0,
+      turnsPlayed: 0,
     }),
 }));

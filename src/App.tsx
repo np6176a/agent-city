@@ -17,7 +17,8 @@ import { DiagnosisModal } from './ui/DiagnosisModal';
 import { TeachingPopup } from './ui/TeachingPopup';
 import { StartScreen } from './ui/StartScreen';
 import { EndScreen } from './ui/EndScreen';
-import type { AgentConfig } from './types';
+import eventsData from './data/events.json';
+import type { AgentConfig, TeachingCard } from './types';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,11 +54,9 @@ export default function App() {
 
     inputHandler.setHandlers({
       onTileHover: (col, row) => {
-        // Unhighlight previous
         if (hoveredTileRef.current) {
           highlightTile(hoveredTileRef.current, false);
         }
-        // Find and highlight tile
         scene.traverse((obj) => {
           if (
             obj.userData?.type === 'tile' &&
@@ -77,6 +76,22 @@ export default function App() {
       },
       onTileClick: (col, row) => {
         const state = useGameStore.getState();
+
+        // Handle repair selection: click on a broken building
+        if (state.phase === 'repair_select') {
+          const key = `${col}:${row}`;
+          const tile = state.grid.get(key);
+          if (!tile?.buildingId) return;
+          const building = state.buildings.find(
+            (b) => b.id === tile.buildingId && b.status === 'broken',
+          );
+          if (!building) return;
+          useGameStore.getState().setRepairBuilding(building.id);
+          useGameStore.getState().setPhase('repair_configure');
+          return;
+        }
+
+        // Normal placement
         if (state.phase !== 'place') return;
         if (!state.selectedBuildingType) return;
 
@@ -98,17 +113,14 @@ export default function App() {
           turnsActive: 0,
         };
 
-        // Add 3D mesh
         const mesh = createBuildingMesh(state.selectedBuildingType, col, row);
         scene.add(mesh);
 
-        // Update state
         useGameStore.getState().placeBuilding(building);
         useGameStore.getState().setPhase('assign');
       },
     });
 
-    // Render loop
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
@@ -116,7 +128,6 @@ export default function App() {
     };
     animate();
 
-    // Handle resize
     const onResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
@@ -131,7 +142,7 @@ export default function App() {
     };
   }, []);
 
-  // Handle agent assignment (when agent is selected during assign phase)
+  // Handle agent assignment
   useEffect(() => {
     if (phase !== 'assign') return;
 
@@ -158,34 +169,63 @@ export default function App() {
 
   const handleConfigConfirm = useCallback((config: AgentConfig) => {
     const state = useGameStore.getState();
-    const latestBuilding = state.buildings[state.buildings.length - 1];
-    if (!latestBuilding) return;
+    const isRepair = state.phase === 'repair_configure';
+    const buildingId = isRepair
+      ? state.repairBuildingId
+      : state.buildings[state.buildings.length - 1]?.id;
+
+    if (!buildingId) return;
 
     // Update building config
-    useGameStore.getState().updateBuilding(latestBuilding.id, { config });
-
-    // Resolve
+    useGameStore.getState().updateBuilding(buildingId, { config });
     useGameStore.getState().setPhase('resolve');
+    useGameStore.getState().incrementTurnsPlayed();
+
+    if (isRepair) {
+      useGameStore.getState().incrementRepairs();
+    }
 
     const updatedBuildings = useGameStore.getState().buildings;
-    const building = updatedBuildings.find((b) => b.id === latestBuilding.id)!;
+    const building = updatedBuildings.find((b) => b.id === buildingId)!;
     const agents = useAgentStore.getState().agents;
     const agent = agents.find((a) => a.id === building.agentId)!;
 
-    const event = evaluateTurn(building, agent);
+    const event = evaluateTurn(building, agent, isRepair, state.turn);
 
-    // Update score
     if (event.type === 'success') {
-      useGameStore.getState().addScore(100);
-      useGameStore.getState().addBudget(50);
-      useGameStore
-        .getState()
-        .updateBuilding(building.id, { status: 'success' });
+      if (isRepair) {
+        useGameStore.getState().addScore(75);
+        useGameStore.getState().addBudget(25);
+      } else {
+        useGameStore.getState().addScore(100);
+        useGameStore.getState().addBudget(50);
+      }
+      useGameStore.getState().updateBuilding(building.id, { status: 'success' });
+
+      // Check for perfect config (right agent + all correct settings)
+      if (
+        agent.strengths.includes(building.type) &&
+        config.tools &&
+        config.memory
+      ) {
+        useGameStore.getState().addScore(50); // bonus for perfect
+        useGameStore.getState().incrementPerfectConfigs();
+      }
     } else {
-      useGameStore.getState().addScore(-25);
-      useGameStore
-        .getState()
-        .updateBuilding(building.id, { status: 'broken' });
+      if (isRepair) {
+        useGameStore.getState().addScore(-10);
+      } else {
+        useGameStore.getState().addScore(-25);
+      }
+      useGameStore.getState().updateBuilding(building.id, { status: 'broken' });
+    }
+
+    // Track concept
+    const card = eventsData.teachingCards.find(
+      (c) => c.id === event.teachingCardId,
+    ) as TeachingCard | undefined;
+    if (card) {
+      useEventStore.getState().addSeenConcept(card.concept);
     }
 
     useEventStore.getState().setCurrentEvent(event);
@@ -193,15 +233,35 @@ export default function App() {
     useGameStore.getState().setPhase('feedback');
   }, []);
 
-  const handleDiagnosisContinue = useCallback(() => {
+  const handleDiagnosisContinue = useCallback((diagnosedCorrectly: boolean) => {
+    const currentEvent = useEventStore.getState().currentEvent;
+
+    // Record diagnosis for failures
+    if (currentEvent?.type === 'breakdown') {
+      useGameStore.getState().recordDiagnosis(diagnosedCorrectly);
+      if (diagnosedCorrectly) {
+        useGameStore.getState().addScore(50);
+      }
+    }
+
     useEventStore.getState().clearEvent();
-    useGameStore.getState().nextTurn();
+
+    // Update consecutive repair counter
+    const wasRepair = currentEvent?.isRepair ?? false;
+    if (wasRepair) {
+      useGameStore.getState().incrementConsecutiveRepairs();
+    } else {
+      useGameStore.getState().resetConsecutiveRepairs();
+    }
+
+    // Route to next phase using advanceTurn which handles all routing
+    useGameStore.getState().advanceTurn();
   }, []);
 
   const handleRestart = useCallback(() => {
     resetGame();
     useAgentStore.getState().resetAssignments();
-    // Clear 3D buildings from scene
+    useEventStore.getState().resetEvents();
     if (sceneRef.current) {
       const toRemove: THREE.Object3D[] = [];
       sceneRef.current.traverse((obj) => {
