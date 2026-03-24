@@ -4,6 +4,7 @@ import { createScene } from './game/Scene';
 import { createCamera, setupCameraControls } from './game/Camera';
 import { createGrid, highlightTile } from './game/Grid';
 import { createBuildingMesh, animateBuildings } from './game/BuildingFactory';
+import { animateBuildingPopIn, animateSuccess, animateFailure } from './game/Animations';
 import { InputHandler } from './game/InputHandler';
 import { evaluateTurn } from './game/Evaluate';
 import { useGameStore, BUILDING_COSTS } from './state/gameStore';
@@ -115,6 +116,7 @@ export default function App() {
 
         const mesh = createBuildingMesh(state.selectedBuildingType, col, row);
         scene.add(mesh);
+        animateBuildingPopIn(mesh);
 
         useGameStore.getState().placeBuilding(building);
         useGameStore.getState().setPhase('assign');
@@ -193,6 +195,15 @@ export default function App() {
     const agent = agents.find((a) => a.id === building.agentId)!;
 
     const event = evaluateTurn(building, agent, isRepair, state.turn);
+
+    // Trigger 3D animations
+    if (sceneRef.current) {
+      if (event.type === 'success') {
+        animateSuccess(sceneRef.current, building.position.col, building.position.row);
+      } else {
+        animateFailure(sceneRef.current, building.position.col, building.position.row);
+      }
+    }
 
     if (event.type === 'success') {
       if (isRepair) {
