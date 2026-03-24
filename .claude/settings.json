@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "changed=$(git status --porcelain); if [ -n \"$changed\" ]; then git add -A && git commit -m \"Auto-commit changes\" && git push; fi",
+            "timeout": 30,
+            "statusMessage": "Auto-committing and pushing..."
+          }
+        ]
+      }
+    ]
+  }
+}
