@@ -5,17 +5,21 @@ interface EventState {
   currentEvent: GameEvent | null;
   eventHistory: GameEvent[];
   teachingContent: TeachingCard | null;
+  seenConcepts: Set<string>;
 
   setCurrentEvent: (event: GameEvent | null) => void;
   addToHistory: (event: GameEvent) => void;
   setTeachingContent: (card: TeachingCard | null) => void;
+  addSeenConcept: (conceptId: string) => void;
   clearEvent: () => void;
+  resetEvents: () => void;
 }
 
 export const useEventStore = create<EventState>((set) => ({
   currentEvent: null,
   eventHistory: [],
   teachingContent: null,
+  seenConcepts: new Set(),
 
   setCurrentEvent: (event) => set({ currentEvent: event }),
 
@@ -24,5 +28,18 @@ export const useEventStore = create<EventState>((set) => ({
 
   setTeachingContent: (card) => set({ teachingContent: card }),
 
+  addSeenConcept: (conceptId) =>
+    set((state) => ({
+      seenConcepts: new Set([...state.seenConcepts, conceptId]),
+    })),
+
   clearEvent: () => set({ currentEvent: null, teachingContent: null }),
+
+  resetEvents: () =>
+    set({
+      currentEvent: null,
+      eventHistory: [],
+      teachingContent: null,
+      seenConcepts: new Set(),
+    }),
 }));

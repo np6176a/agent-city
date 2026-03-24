@@ -1,6 +1,15 @@
 export type BuildingType = 'hospital' | 'library' | 'transit' | 'security';
 
-export type GamePhase = 'start' | 'place' | 'assign' | 'configure' | 'resolve' | 'feedback' | 'end';
+export type GamePhase =
+  | 'start'
+  | 'place'
+  | 'assign'
+  | 'configure'
+  | 'resolve'
+  | 'feedback'
+  | 'repair_select'
+  | 'repair_configure'
+  | 'end';
 
 export type AutonomyLevel = 'low' | 'medium' | 'high';
 
@@ -58,6 +67,13 @@ export interface GameEvent {
   cause: FailureCause | 'success';
   teachingCardId: string;
   severity: EventSeverity;
+  isRepair?: boolean;
+}
+
+export interface DiagnosisOption {
+  id: string;
+  text: string;
+  correct: boolean;
 }
 
 export interface TeachingCard {
@@ -67,4 +83,5 @@ export interface TeachingCard {
   explanation: string;
   whatWentWrong: string;
   correctConfig: AgentConfig;
+  diagnosisOptions?: DiagnosisOption[];
 }

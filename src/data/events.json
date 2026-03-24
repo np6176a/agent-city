@@ -4,47 +4,80 @@
       "id": "tc_no_tools",
       "title": "Rue Needs Her Tools",
       "concept": "tool_use",
-      "explanation": "AI agents need access to external tools to look up information, query databases, and verify facts. Without tools, they're forced to guess — and guessing leads to errors.",
+      "explanation": "AI agents need access to external tools to look up information, query databases, and verify facts. Without tools, they're forced to guess — and guessing leads to errors. This is like RAG — retrieval-augmented generation.",
       "whatWentWrong": "The agent had no tools enabled, so it couldn't look up the information it needed and made incorrect assumptions.",
-      "correctConfig": { "tools": true, "memory": false, "autonomy": "medium" }
+      "correctConfig": { "tools": true, "memory": false, "autonomy": "medium" },
+      "diagnosisOptions": [
+        { "id": "a", "text": "Turn on Tools so the agent can look things up", "correct": true },
+        { "id": "b", "text": "Give the agent more autonomy", "correct": false },
+        { "id": "c", "text": "Switch to a different agent", "correct": false }
+      ]
     },
     {
       "id": "tc_no_memory",
       "title": "Axel Forgot the Plan",
       "concept": "context_memory",
-      "explanation": "Memory lets agents retain context across steps. Multi-step tasks require remembering what happened before — without memory, each step starts from scratch.",
+      "explanation": "Memory lets agents retain context across steps. Multi-step tasks require remembering what happened before — without memory, each step starts from scratch. They restart every time.",
       "whatWentWrong": "The agent had no memory enabled, so it forgot the earlier steps of its plan and couldn't complete the multi-step task.",
-      "correctConfig": { "tools": false, "memory": true, "autonomy": "medium" }
+      "correctConfig": { "tools": false, "memory": true, "autonomy": "medium" },
+      "diagnosisOptions": [
+        { "id": "a", "text": "Turn on Memory so the agent can track its plan", "correct": true },
+        { "id": "b", "text": "Increase autonomy to let it figure things out", "correct": false },
+        { "id": "c", "text": "Turn on Tools instead", "correct": false }
+      ]
     },
     {
       "id": "tc_high_autonomy",
       "title": "Sentry Went Rogue",
       "concept": "guardrails",
-      "explanation": "High autonomy means the agent makes decisions without human oversight. For safety-critical tasks, this can lead to dangerous actions that bypass important checks.",
+      "explanation": "High autonomy means the agent makes decisions without human oversight. For safety-critical tasks, this can lead to dangerous actions that bypass important checks. Guardrails and human-in-the-loop checks exist for a reason.",
       "whatWentWrong": "The agent was given high autonomy on a security-critical task and overrode safety protocols without human approval.",
-      "correctConfig": { "tools": true, "memory": false, "autonomy": "low" }
+      "correctConfig": { "tools": true, "memory": false, "autonomy": "low" },
+      "diagnosisOptions": [
+        { "id": "a", "text": "Lower the autonomy level to add oversight", "correct": true },
+        { "id": "b", "text": "Turn off Tools to limit capabilities", "correct": false },
+        { "id": "c", "text": "Give the agent memory to remember the rules", "correct": false }
+      ]
     },
     {
       "id": "tc_wrong_agent",
       "title": "Wrong Bot for the Job",
       "concept": "task_specialization",
-      "explanation": "Different agents are designed for different tasks. Assigning an agent to a task outside its specialty means it lacks the right training and approach for the job.",
+      "explanation": "Different agents are designed for different tasks. Assigning an agent to a task outside its specialty means it lacks the right training and approach for the job. A planner isn't a researcher.",
       "whatWentWrong": "This agent wasn't suited for this building type — its strengths lie elsewhere.",
-      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" },
+      "diagnosisOptions": [
+        { "id": "a", "text": "Assign a different agent that specializes in this task", "correct": true },
+        { "id": "b", "text": "Turn on all capabilities to compensate", "correct": false },
+        { "id": "c", "text": "Lower the autonomy level", "correct": false }
+      ]
     },
     {
       "id": "tc_poor_fit",
       "title": "Close, But Not Quite",
       "concept": "agent_architecture",
-      "explanation": "A well-functioning AI agent needs the right combination of capabilities: the right tools, memory when needed, and an appropriate level of autonomy for the task.",
+      "explanation": "A well-functioning AI agent needs the right combination of capabilities: the right tools, memory when needed, and an appropriate level of autonomy for the task. One missing piece can cause failure.",
       "whatWentWrong": "The overall configuration wasn't well-matched to the task requirements, leading to suboptimal performance.",
-      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" },
+      "diagnosisOptions": [
+        { "id": "a", "text": "Review and adjust all configuration settings together", "correct": true },
+        { "id": "b", "text": "Just increase autonomy", "correct": false },
+        { "id": "c", "text": "Remove all capabilities and start minimal", "correct": false }
+      ]
     },
     {
       "id": "tc_success",
       "title": "Nailed It!",
       "concept": "reinforcement",
       "explanation": "This configuration worked because the right agent was paired with the right building, and the tools, memory, and autonomy settings matched the task requirements.",
+      "whatWentWrong": "",
+      "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+    },
+    {
+      "id": "tc_repair_success",
+      "title": "Second Time's the Charm!",
+      "concept": "iteration",
+      "explanation": "You went back, diagnosed the problem, and fixed the configuration. That's exactly how real AI engineering works — iterate, learn from failures, and improve. Real engineers debug and repair.",
       "whatWentWrong": "",
       "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
     }

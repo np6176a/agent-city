@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../state/gameStore';
+import { useAgentStore } from '../state/agentStore';
+import { useEventStore } from '../state/eventStore';
 import type { AgentConfig, AutonomyLevel } from '../types';
 
 interface ConfigPanelProps {
@@ -8,11 +10,40 @@ interface ConfigPanelProps {
 
 export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
   const phase = useGameStore((s) => s.phase);
+  const buildings = useGameStore((s) => s.buildings);
+  const repairBuildingId = useGameStore((s) => s.repairBuildingId);
+  const agents = useAgentStore((s) => s.agents);
+  const eventHistory = useEventStore((s) => s.eventHistory);
   const [tools, setTools] = useState(false);
   const [memory, setMemory] = useState(false);
   const [autonomy, setAutonomy] = useState<AutonomyLevel>('medium');
 
-  if (phase !== 'configure') return null;
+  if (phase !== 'configure' && phase !== 'repair_configure') return null;
+
+  const isRepair = phase === 'repair_configure';
+
+  // Find the building and agent for context
+  const building = isRepair
+    ? buildings.find((b) => b.id === repairBuildingId)
+    : buildings[buildings.length - 1];
+
+  const agent = building?.agentId
+    ? agents.find((a) => a.id === building.agentId)
+    : null;
+
+  // Find the previous failure for this building (repair mode)
+  const previousFailure = isRepair && building
+    ? eventHistory
+        .filter((e) => e.buildingId === building.id && e.type === 'breakdown')
+        .pop()
+    : null;
+
+  const FAILURE_DESCRIPTIONS: Record<string, string> = {
+    no_tools: 'had no tools and was guessing instead of looking things up',
+    no_memory: 'had no memory and forgot the multi-step plan',
+    high_autonomy_no_guardrails: 'had too much autonomy and overrode safety protocols',
+    poor_fit: 'had a configuration that didn\'t match the task requirements',
+  };
 
   return (
     <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60">
@@ -20,13 +51,50 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
         className="border rounded-2xl p-6 w-80 flex flex-col gap-5"
         style={{
           backgroundColor: 'var(--bg-panel)',
-          borderColor: 'rgba(167, 139, 250, 0.3)',
-          boxShadow: '0 0 40px rgba(167, 139, 250, 0.1)',
+          borderColor: isRepair
+            ? 'rgba(255, 209, 102, 0.3)'
+            : 'rgba(167, 139, 250, 0.3)',
+          boxShadow: isRepair
+            ? '0 0 40px rgba(255, 209, 102, 0.1)'
+            : '0 0 40px rgba(167, 139, 250, 0.1)',
         }}
       >
+        {/* Agent + Building context */}
+        {agent && building && (
+          <div className="flex items-center gap-3">
+            <img
+              src={agent.portrait}
+              alt={agent.name}
+              className="w-12 h-12 rounded-xl object-contain"
+              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+            />
+            <div>
+              <span className="font-headline font-bold text-sm" style={{ color: agent.color }}>
+                {agent.name}
+              </span>
+              <span className="text-gray-500 text-xs block capitalize">{building.type}</span>
+            </div>
+          </div>
+        )}
+
         <h3 className="font-headline text-white text-lg font-bold text-center">
-          Configure Agent
+          {isRepair ? 'Reconfigure Agent' : 'Configure Agent'}
         </h3>
+
+        {/* Previous failure reminder (repair mode) */}
+        {isRepair && previousFailure && (
+          <div
+            className="rounded-xl p-3 text-xs"
+            style={{
+              backgroundColor: 'rgba(255, 138, 128, 0.08)',
+              border: '1px solid rgba(255, 138, 128, 0.2)',
+              color: 'var(--coral)',
+            }}
+          >
+            <strong>Last time:</strong> {agent?.name}{' '}
+            {FAILURE_DESCRIPTIONS[previousFailure.cause] ?? 'failed to complete the task'}.
+          </div>
+        )}
 
         <label className="flex items-center justify-between text-sm text-gray-300">
           <span>Tools Access</span>
@@ -78,14 +146,16 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
 
         <button
           onClick={() => onConfirm({ tools, memory, autonomy })}
-          className="mt-2 py-2.5 rounded-2xl text-white font-headline font-bold transition-all hover:scale-105"
+          className="mt-2 py-2.5 rounded-2xl font-headline font-bold transition-all hover:scale-105"
           style={{
-            backgroundColor: 'var(--mint)',
+            backgroundColor: isRepair ? 'var(--yellow)' : 'var(--mint)',
             color: '#0F0F1A',
-            boxShadow: '0 0 16px rgba(94, 232, 176, 0.3)',
+            boxShadow: isRepair
+              ? '0 0 16px rgba(255, 209, 102, 0.3)'
+              : '0 0 16px rgba(94, 232, 176, 0.3)',
           }}
         >
-          Confirm & Resolve
+          {isRepair ? 'Repair & Run' : 'Confirm & Run'}
         </button>
       </div>
     </div>
