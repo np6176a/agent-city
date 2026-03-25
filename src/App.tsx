@@ -6,6 +6,7 @@ import { createGrid, highlightTile } from './game/Grid';
 import { createBuildingMesh, animateBuildings } from './game/BuildingFactory';
 import { animateBuildingPopIn, animateSuccess, animateFailure } from './game/Animations';
 import { placeCharacterOnBuilding, animateCharacters, removeCharacterFromBuilding } from './game/CharacterFactory';
+import { updateRoads, animateRoads, clearRoads } from './game/RoadSystem';
 import { InputHandler } from './game/InputHandler';
 import { evaluateTurn } from './game/Evaluate';
 import { useGameStore, BUILDING_COSTS } from './state/gameStore';
@@ -127,17 +128,26 @@ export default function App() {
         animateBuildingPopIn(mesh);
 
         useGameStore.getState().placeBuilding(building);
+
+        // Update road network (connects buildings to transit hub)
+        const updatedBuildings = useGameStore.getState().buildings;
+        updateRoads(scene, updatedBuildings);
+
         useGameStore.getState().setPhase('assign');
       },
     });
 
     const clock = new THREE.Clock();
+    let lastElapsed = 0;
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
+      const delta = elapsed - lastElapsed;
+      lastElapsed = elapsed;
       animateBuildings(scene, elapsed);
       animateCharacters(scene, elapsed);
+      animateRoads(elapsed, delta);
       renderer.render(scene, camera);
     };
     animate();
@@ -324,6 +334,7 @@ export default function App() {
     useAgentStore.getState().resetAssignments();
     useEventStore.getState().resetEvents();
     if (sceneRef.current) {
+      clearRoads(sceneRef.current);
       const toRemove: THREE.Object3D[] = [];
       sceneRef.current.traverse((obj) => {
         if (
