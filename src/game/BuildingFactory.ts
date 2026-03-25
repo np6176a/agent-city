@@ -3,10 +3,11 @@ import type { BuildingType } from '../types';
 
 const BUILDING_CONFIGS: Record<
   BuildingType,
-  { color: number; height: number; details: (group: THREE.Group) => void }
+  { color: number; glow: number; height: number; details: (group: THREE.Group) => void }
 > = {
   hospital: {
-    color: 0xe8e8f0,
+    color: 0xf0e6f6,
+    glow: 0xe8b4f8,
     height: 1.2,
     details: (group) => {
       // Cross on top
@@ -14,8 +15,8 @@ const BUILDING_CONFIGS: Record<
         new THREE.BoxGeometry(0.4, 0.08, 0.12),
         new THREE.MeshStandardMaterial({
           color: 0xffffff,
-          emissive: 0xffffff,
-          emissiveIntensity: 0.2,
+          emissive: 0xffccee,
+          emissiveIntensity: 0.6,
         }),
       );
       crossH.position.set(0, 1.24, 0);
@@ -26,28 +27,34 @@ const BUILDING_CONFIGS: Record<
         new THREE.BoxGeometry(0.12, 0.08, 0.4),
         new THREE.MeshStandardMaterial({
           color: 0xffffff,
-          emissive: 0xffffff,
-          emissiveIntensity: 0.2,
+          emissive: 0xffccee,
+          emissiveIntensity: 0.6,
         }),
       );
       crossV.position.set(0, 1.24, 0);
       crossV.userData.animate = 'pulse';
       group.add(crossV);
 
-      addWindows(group, 0xc0c0d0, 1.2);
+      addWindows(group, 0xffc8e8, 1.2);
+
+      // Interior glow light
+      const light = new THREE.PointLight(0xe8b4f8, 0.6, 2.5);
+      light.position.set(0, 0.6, 0);
+      group.add(light);
     },
   },
   library: {
-    color: 0x3b6b8c,
+    color: 0xc8e8f8,
+    glow: 0x88d0f0,
     height: 0.9,
     details: (group) => {
       // Glowing sphere beacon on roof
       const sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.12, 16, 16),
         new THREE.MeshStandardMaterial({
-          color: 0x4a8aaa,
-          emissive: 0x4a8aaa,
-          emissiveIntensity: 0.5,
+          color: 0x88ddff,
+          emissive: 0x88ddff,
+          emissiveIntensity: 0.7,
         }),
       );
       sphere.position.set(0, 0.96, 0);
@@ -55,16 +62,26 @@ const BUILDING_CONFIGS: Record<
       sphere.userData.baseY = 0.96;
       group.add(sphere);
 
-      addWindows(group, 0x2d5570, 0.9);
+      addWindows(group, 0x88d0f0, 0.9);
+
+      // Interior glow light
+      const light = new THREE.PointLight(0x88d0f0, 0.5, 2);
+      light.position.set(0, 0.45, 0);
+      group.add(light);
     },
   },
   transit: {
-    color: 0x5c4b8a,
+    color: 0xd4c8f8,
+    glow: 0xb49afa,
     height: 0.7,
     details: (group) => {
       // Cylinder pillars at corners
       const pillarGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.3, 8);
-      const pillarMat = new THREE.MeshStandardMaterial({ color: 0x4a3d70 });
+      const pillarMat = new THREE.MeshStandardMaterial({
+        color: 0xc0a8f0,
+        emissive: 0xb49afa,
+        emissiveIntensity: 0.2,
+      });
       const offsets = [
         [-0.35, 0.35],
         [0.35, 0.35],
@@ -80,15 +97,25 @@ const BUILDING_CONFIGS: Record<
       // Flat roof - slow rotation
       const roof = new THREE.Mesh(
         new THREE.BoxGeometry(0.85, 0.05, 0.85),
-        new THREE.MeshStandardMaterial({ color: 0x4a3d70 }),
+        new THREE.MeshStandardMaterial({
+          color: 0xc0a8f0,
+          emissive: 0xb49afa,
+          emissiveIntensity: 0.25,
+        }),
       );
       roof.position.set(0, 1.0, 0);
       roof.userData.animate = 'rotate';
       group.add(roof);
+
+      // Interior glow light
+      const light = new THREE.PointLight(0xb49afa, 0.5, 2);
+      light.position.set(0, 0.35, 0);
+      group.add(light);
     },
   },
   security: {
-    color: 0x8b3a3a,
+    color: 0xf8c8c0,
+    glow: 0xf07060,
     height: 1.6,
     details: (group) => {
       // Tall narrow tower body override
@@ -98,9 +125,9 @@ const BUILDING_CONFIGS: Record<
       const cone = new THREE.Mesh(
         new THREE.ConeGeometry(0.15, 0.25, 8),
         new THREE.MeshStandardMaterial({
-          color: 0xaa2222,
-          emissive: 0xaa2222,
-          emissiveIntensity: 0.4,
+          color: 0xff5544,
+          emissive: 0xff5544,
+          emissiveIntensity: 0.6,
         }),
       );
       cone.position.set(0, 1.72, 0);
@@ -108,12 +135,38 @@ const BUILDING_CONFIGS: Record<
       cone.userData.baseY = 1.72;
       group.add(cone);
 
-      // Point light for beacon glow
-      const light = new THREE.PointLight(0xaa2222, 0.5, 3);
-      light.position.set(0, 1.8, 0);
-      light.userData.animate = 'light_pulse';
-      light.userData.baseY = 1.8;
-      group.add(light);
+      // Custom windows for narrow tower (body scaled to 0.7)
+      const windowGeo = new THREE.BoxGeometry(0.15, 0.15, 0.02);
+      const windowMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xf07060,
+        emissiveIntensity: 0.7,
+      });
+      const yPos = 1.6 * 0.4;
+      const towerPositions = [
+        { x: -0.15, z: 0.30 },
+        { x: 0.15, z: 0.30 },
+        { x: -0.15, z: -0.30 },
+        { x: 0.15, z: -0.30 },
+      ];
+      for (const pos of towerPositions) {
+        const win = new THREE.Mesh(windowGeo, windowMat.clone());
+        win.position.set(pos.x, yPos, pos.z);
+        win.userData.animate = 'breathe';
+        group.add(win);
+      }
+
+      // Beacon glow light
+      const beaconLight = new THREE.PointLight(0xff5544, 0.8, 3);
+      beaconLight.position.set(0, 1.8, 0);
+      beaconLight.userData.animate = 'light_pulse';
+      beaconLight.userData.baseY = 1.8;
+      group.add(beaconLight);
+
+      // Interior glow light
+      const interiorLight = new THREE.PointLight(0xf07060, 0.4, 2);
+      interiorLight.position.set(0, 0.8, 0);
+      group.add(interiorLight);
     },
   },
 };
@@ -125,9 +178,9 @@ function addWindows(
 ): void {
   const windowGeo = new THREE.BoxGeometry(0.15, 0.15, 0.02);
   const windowMat = new THREE.MeshStandardMaterial({
-    color,
+    color: 0xffffff,
     emissive: color,
-    emissiveIntensity: 0.3,
+    emissiveIntensity: 0.7,
   });
 
   const yPos = buildingHeight * 0.4;
@@ -154,11 +207,13 @@ export function createBuildingMesh(
   const config = BUILDING_CONFIGS[type];
   const group = new THREE.Group();
 
-  // Main body
+  // Main body with emissive inner glow
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(0.85, config.height, 0.85),
     new THREE.MeshStandardMaterial({
       color: config.color,
+      emissive: config.glow,
+      emissiveIntensity: 0.15,
       roughness: 0.3,
       metalness: 0.1,
     }),
@@ -198,7 +253,7 @@ export function animateBuildings(scene: THREE.Scene, time: number): void {
       case 'pulse': {
         const mesh = obj as THREE.Mesh;
         const mat = mesh.material as THREE.MeshStandardMaterial;
-        mat.emissiveIntensity = 0.2 + Math.sin(time * 3) * 0.15;
+        mat.emissiveIntensity = 0.4 + Math.sin(time * 3) * 0.3;
         break;
       }
 
@@ -212,14 +267,14 @@ export function animateBuildings(scene: THREE.Scene, time: number): void {
       case 'breathe': {
         const mesh = obj as THREE.Mesh;
         const mat = mesh.material as THREE.MeshStandardMaterial;
-        mat.emissiveIntensity = 0.25 + Math.sin(time * 1.5 + obj.position.x * 5) * 0.15;
+        mat.emissiveIntensity = 0.5 + Math.sin(time * 1.5 + obj.position.x * 5) * 0.3;
         break;
       }
 
       // Point light intensity pulse (security beacon)
       case 'light_pulse': {
         const light = obj as THREE.PointLight;
-        light.intensity = 0.4 + Math.sin(time * 2) * 0.2;
+        light.intensity = 0.6 + Math.sin(time * 2) * 0.3;
         light.position.y = (obj.userData.baseY as number) + Math.sin(time * 2) * 0.04;
         break;
       }
