@@ -7,6 +7,7 @@ const PHASE_LABELS: Record<string, string> = {
   resolve: 'Resolving...',
   feedback: 'Review Results',
   repair_select: 'Select a Building to Repair',
+  repair_assign: 'Reassign Agent',
   repair_configure: 'Reconfigure Agent',
 };
 
@@ -19,7 +20,7 @@ export function HUD({ onReset }: HUDProps) {
 
   if (phase === 'start' || phase === 'end') return null;
 
-  const isRepair = phase === 'repair_select' || phase === 'repair_configure';
+  const isRepair = phase === 'repair_select' || phase === 'repair_assign' || phase === 'repair_configure';
 
   return (
     <>

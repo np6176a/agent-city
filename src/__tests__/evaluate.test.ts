@@ -15,6 +15,15 @@ function makeBuilding(overrides: Partial<Building> = {}): Building {
   };
 }
 
+const agentDefaults = {
+  pronouns: '',
+  tagline: '',
+  motto: '',
+  bio: '',
+  personality: [],
+  reactions: {},
+};
+
 function makeAgent(overrides: Partial<Agent> = {}): Agent {
   return {
     id: 'rue',
@@ -25,6 +34,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     portrait: '/assets/rue.png',
     strengths: ['library'],
     weakness: ['transit'],
+    ...agentDefaults,
     ...overrides,
   };
 }
@@ -38,6 +48,7 @@ const axel: Agent = {
   portrait: '/assets/axel.png',
   strengths: ['transit'],
   weakness: ['security'],
+  ...agentDefaults,
 };
 
 const sentry: Agent = {
@@ -49,6 +60,7 @@ const sentry: Agent = {
   portrait: '/assets/sentry.png',
   strengths: ['security'],
   weakness: ['library'],
+  ...agentDefaults,
 };
 
 describe('evaluateTurn', () => {

@@ -3,7 +3,7 @@
     "type": "hospital",
     "name": "Hospital",
     "cost": 150,
-    "color": "#5EE8B0",
+    "color": "#F9A8D4",
     "description": "Heals citizens and manages patient records"
   },
   {

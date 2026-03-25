@@ -7,7 +7,20 @@
     "color": "#5EE8B0",
     "portrait": "/assets/axel.png",
     "strengths": ["transit"],
-    "weakness": ["security"]
+    "weakness": ["security"],
+    "pronouns": "He/Him",
+    "tagline": "Has a 47-step plan for everything",
+    "motto": "If it's not in the plan, it's not happening.",
+    "bio": "Axel was built to think three steps ahead. He's the kind of robot who color-codes his charging schedule and has strong opinions about the optimal route to anywhere. He carries a tiny clipboard everywhere and his head tilts 15 degrees to the left when he's deep in thought.",
+    "personality": ["Methodical to a fault", "Secretly proud of his clipboard", "Gets anxious when things aren't in sequential order", "Says \"per my earlier analysis\" in casual conversation"],
+    "reactions": {
+      "success": "Plan executed. All 7 steps. In order. You're welcome.",
+      "no_tools": "That... was not in the plan.",
+      "no_memory": "I had a plan. A really good plan. I just... where did it go?",
+      "high_autonomy_no_guardrails": "That... was not in the plan.",
+      "wrong_agent": "I calculated a 12% chance I was the right choice. I should have mentioned that.",
+      "poor_fit": "That... was not in the plan."
+    }
   },
   {
     "id": "rue",
@@ -17,7 +30,20 @@
     "color": "#67D4E8",
     "portrait": "/assets/rue.png",
     "strengths": ["library"],
-    "weakness": ["transit"]
+    "weakness": ["transit"],
+    "pronouns": "She/Her",
+    "tagline": "Sends you 11 links at 2am",
+    "motto": "I already looked it up. Wait — let me look it up again to be sure.",
+    "bio": "Rue is the fastest thinker in Agent City. She's got one big magnifying-glass eye for deep research and one small eye for skimming. Data fragments orbit around her head like tiny moons. She's small, bouncy, and has never once entered a room at normal speed.",
+    "personality": ["Speaks in rapid-fire tangents", "Vibrates when she finds good information", "Genuinely cannot sit still", "Treats every question like the most interesting thing ever"],
+    "reactions": {
+      "success": "Found it, fixed it, done! What's next what's next what's next?",
+      "no_tools": "You sent me in without search? I was just... guessing? I DON'T GUESS.",
+      "no_memory": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see.",
+      "high_autonomy_no_guardrails": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see.",
+      "wrong_agent": "I mean, I TRIED. But this really isn't my thing. At all.",
+      "poor_fit": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see."
+    }
   },
   {
     "id": "sentry",
@@ -27,6 +53,19 @@
     "color": "#FF8A80",
     "portrait": "/assets/sentry.png",
     "strengths": ["security"],
-    "weakness": ["library"]
+    "weakness": ["library"],
+    "pronouns": "He/Him",
+    "tagline": "Filed a report about his own shadow",
+    "motto": "Just to be safe. And then one more time, just to be extra safe.",
+    "bio": "Sentry is the widest, sturdiest robot in Agent City. He's got a hard hat that's slightly too big, a shield emblem he polishes every morning, and a scanner arm that beeps at things that are \"concerning.\" He waddles when he walks and apologizes to furniture he bumps into.",
+    "personality": ["Perpetually concerned but warmly caring", "Says \"just to be safe\" 40 times a day", "Checks if others have charged before himself", "His scanner beeps at squirrels"],
+    "reactions": {
+      "success": "All clear. No incidents. ...I'm going to do one more sweep just to be safe.",
+      "no_tools": "I knew it. I had a bad feeling. I always have a bad feeling but THIS TIME I was right.",
+      "no_memory": "I knew it. I had a bad feeling. I always have a bad feeling but THIS TIME I was right.",
+      "high_autonomy_no_guardrails": "You took away my alerts?? How am I supposed to — I can't even — this is a safety violation.",
+      "wrong_agent": "I appreciate the confidence but I am NOT qualified for this and I said so in my pre-assignment risk assessment that nobody read.",
+      "poor_fit": "I knew it. I had a bad feeling. I always have a bad feeling but THIS TIME I was right."
+    }
   }
 ]

@@ -88,7 +88,7 @@ export default function App() {
           );
           if (!building) return;
           useGameStore.getState().setRepairBuilding(building.id);
-          useGameStore.getState().setPhase('repair_configure');
+          useGameStore.getState().setPhase('repair_assign');
           return;
         }
 
@@ -146,30 +146,28 @@ export default function App() {
     };
   }, []);
 
-  // Handle agent assignment
-  useEffect(() => {
-    if (phase !== 'assign') return;
+  const handleAgentConfirm = useCallback((agentId: string) => {
+    const currentPhase = useGameStore.getState().phase;
 
-    const unsub = useAgentStore.subscribe((state) => {
-      if (state.selectedAgentId && useGameStore.getState().phase === 'assign') {
-        const buildings = useGameStore.getState().buildings;
-        const latestBuilding = buildings[buildings.length - 1];
-        if (latestBuilding && !latestBuilding.agentId) {
-          useAgentStore
-            .getState()
-            .assignAgent(latestBuilding.id, state.selectedAgentId);
-          useGameStore
-            .getState()
-            .updateBuilding(latestBuilding.id, {
-              agentId: state.selectedAgentId,
-            });
-          useGameStore.getState().setPhase('configure');
-        }
+    if (currentPhase === 'assign') {
+      const buildings = useGameStore.getState().buildings;
+      const latestBuilding = buildings[buildings.length - 1];
+      if (latestBuilding && !latestBuilding.agentId) {
+        useAgentStore.getState().assignAgent(latestBuilding.id, agentId);
+        useGameStore.getState().updateBuilding(latestBuilding.id, { agentId });
+        useGameStore.getState().setPhase('configure');
       }
-    });
+    } else if (currentPhase === 'repair_assign') {
+      const repairId = useGameStore.getState().repairBuildingId;
+      if (repairId) {
+        useAgentStore.getState().assignAgent(repairId, agentId);
+        useGameStore.getState().updateBuilding(repairId, { agentId });
+        useGameStore.getState().setPhase('repair_configure');
+      }
+    }
 
-    return unsub;
-  }, [phase]);
+    useAgentStore.getState().selectAgent(null);
+  }, []);
 
   const handleConfigConfirm = useCallback((config: AgentConfig) => {
     const state = useGameStore.getState();
@@ -271,6 +269,16 @@ export default function App() {
     useGameStore.getState().advanceTurn();
   }, []);
 
+  const handleChangeAgent = useCallback(() => {
+    const currentPhase = useGameStore.getState().phase;
+    if (currentPhase === 'configure') {
+      useGameStore.getState().setPhase('assign');
+    } else if (currentPhase === 'repair_configure') {
+      useGameStore.getState().setPhase('repair_assign');
+    }
+    useAgentStore.getState().selectAgent(null);
+  }, []);
+
   const handleRestart = useCallback(() => {
     resetGame();
     useAgentStore.getState().resetAssignments();
@@ -292,8 +300,8 @@ export default function App() {
         {phase === 'end' && <EndScreen onRestart={handleRestart} />}
         <HUD onReset={handleRestart} />
         <BuildPanel />
-        <AgentSelect />
-        <ConfigPanel onConfirm={handleConfigConfirm} />
+        <AgentSelect onConfirm={handleAgentConfirm} />
+        <ConfigPanel onConfirm={handleConfigConfirm} onChangeAgent={handleChangeAgent} />
         <DiagnosisModal onContinue={handleDiagnosisContinue} />
         <TeachingPopup />
       </div>

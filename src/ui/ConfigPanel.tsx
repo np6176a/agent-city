@@ -6,9 +6,10 @@ import type { AgentConfig, AutonomyLevel } from '../types';
 
 interface ConfigPanelProps {
   onConfirm: (config: AgentConfig) => void;
+  onChangeAgent: () => void;
 }
 
-export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
+export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
   const phase = useGameStore((s) => s.phase);
   const buildings = useGameStore((s) => s.buildings);
   const repairBuildingId = useGameStore((s) => s.repairBuildingId);
@@ -85,6 +86,9 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
                 {agent.name}
               </span>
               <span className="text-gray-500 text-xs block capitalize">{building.type}</span>
+              <span className="text-gray-600 text-[10px] block italic mt-0.5">
+                "{agent.motto}"
+              </span>
             </div>
           </div>
         )}
@@ -157,8 +161,20 @@ export function ConfigPanel({ onConfirm }: ConfigPanelProps) {
         </div>
 
         <button
+          onClick={onChangeAgent}
+          className="mt-2 py-2 rounded-2xl font-headline font-semibold text-sm transition-all hover:scale-105"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            color: 'var(--violet)',
+            border: '1px solid rgba(167, 139, 250, 0.3)',
+          }}
+        >
+          Change Agent
+        </button>
+
+        <button
           onClick={() => onConfirm({ tools, memory, autonomy })}
-          className="mt-2 py-2.5 rounded-2xl font-headline font-bold transition-all hover:scale-105"
+          className="py-2.5 rounded-2xl font-headline font-bold transition-all hover:scale-105"
           style={{
             backgroundColor: isRepair ? 'var(--yellow)' : 'var(--mint)',
             color: '#0F0F1A',
