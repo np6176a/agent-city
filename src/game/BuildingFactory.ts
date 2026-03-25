@@ -6,7 +6,7 @@ const BUILDING_CONFIGS: Record<
   { color: number; height: number; details: (group: THREE.Group) => void }
 > = {
   hospital: {
-    color: 0x5ee8b0,
+    color: 0xe8e8f0,
     height: 1.2,
     details: (group) => {
       // Cross on top
@@ -34,19 +34,19 @@ const BUILDING_CONFIGS: Record<
       crossV.userData.animate = 'pulse';
       group.add(crossV);
 
-      addWindows(group, 0x3cb88a, 1.2);
+      addWindows(group, 0xc0c0d0, 1.2);
     },
   },
   library: {
-    color: 0x67d4e8,
+    color: 0x3b6b8c,
     height: 0.9,
     details: (group) => {
       // Glowing sphere beacon on roof
       const sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.12, 16, 16),
         new THREE.MeshStandardMaterial({
-          color: 0x67d4e8,
-          emissive: 0x67d4e8,
+          color: 0x4a8aaa,
+          emissive: 0x4a8aaa,
           emissiveIntensity: 0.5,
         }),
       );
@@ -55,16 +55,16 @@ const BUILDING_CONFIGS: Record<
       sphere.userData.baseY = 0.96;
       group.add(sphere);
 
-      addWindows(group, 0x4aabb8, 0.9);
+      addWindows(group, 0x2d5570, 0.9);
     },
   },
   transit: {
-    color: 0xa78bfa,
+    color: 0x5c4b8a,
     height: 0.7,
     details: (group) => {
       // Cylinder pillars at corners
       const pillarGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.3, 8);
-      const pillarMat = new THREE.MeshStandardMaterial({ color: 0x8b6fe0 });
+      const pillarMat = new THREE.MeshStandardMaterial({ color: 0x4a3d70 });
       const offsets = [
         [-0.35, 0.35],
         [0.35, 0.35],
@@ -80,7 +80,7 @@ const BUILDING_CONFIGS: Record<
       // Flat roof - slow rotation
       const roof = new THREE.Mesh(
         new THREE.BoxGeometry(0.85, 0.05, 0.85),
-        new THREE.MeshStandardMaterial({ color: 0x8b6fe0 }),
+        new THREE.MeshStandardMaterial({ color: 0x4a3d70 }),
       );
       roof.position.set(0, 1.0, 0);
       roof.userData.animate = 'rotate';
@@ -88,7 +88,7 @@ const BUILDING_CONFIGS: Record<
     },
   },
   security: {
-    color: 0xff8a80,
+    color: 0x8b3a3a,
     height: 1.6,
     details: (group) => {
       // Tall narrow tower body override
@@ -98,8 +98,8 @@ const BUILDING_CONFIGS: Record<
       const cone = new THREE.Mesh(
         new THREE.ConeGeometry(0.15, 0.25, 8),
         new THREE.MeshStandardMaterial({
-          color: 0xff4444,
-          emissive: 0xff4444,
+          color: 0xaa2222,
+          emissive: 0xaa2222,
           emissiveIntensity: 0.4,
         }),
       );
@@ -109,7 +109,7 @@ const BUILDING_CONFIGS: Record<
       group.add(cone);
 
       // Point light for beacon glow
-      const light = new THREE.PointLight(0xff4444, 0.5, 3);
+      const light = new THREE.PointLight(0xaa2222, 0.5, 3);
       light.position.set(0, 1.8, 0);
       light.userData.animate = 'light_pulse';
       light.userData.baseY = 1.8;

@@ -5,6 +5,7 @@ import { createCamera, setupCameraControls } from './game/Camera';
 import { createGrid, highlightTile } from './game/Grid';
 import { createBuildingMesh, animateBuildings } from './game/BuildingFactory';
 import { animateBuildingPopIn, animateSuccess, animateFailure } from './game/Animations';
+import { placeCharacterOnBuilding, animateCharacters, removeCharacterFromBuilding } from './game/CharacterFactory';
 import { InputHandler } from './game/InputHandler';
 import { evaluateTurn } from './game/Evaluate';
 import { useGameStore, BUILDING_COSTS } from './state/gameStore';
@@ -19,7 +20,14 @@ import { TeachingPopup } from './ui/TeachingPopup';
 import { StartScreen } from './ui/StartScreen';
 import { EndScreen } from './ui/EndScreen';
 import eventsData from './data/events.json';
-import type { AgentConfig, TeachingCard } from './types';
+import type { AgentConfig, BuildingType, TeachingCard } from './types';
+
+const BUILDING_HEIGHTS: Record<BuildingType, number> = {
+  hospital: 1.2,
+  library: 0.9,
+  transit: 0.7,
+  security: 1.6,
+};
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -127,7 +135,9 @@ export default function App() {
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
-      animateBuildings(scene, clock.getElapsedTime());
+      const elapsed = clock.getElapsedTime();
+      animateBuildings(scene, elapsed);
+      animateCharacters(scene, elapsed);
       renderer.render(scene, camera);
     };
     animate();
@@ -149,12 +159,27 @@ export default function App() {
   const handleAgentConfirm = useCallback((agentId: string) => {
     const currentPhase = useGameStore.getState().phase;
 
+    const placeCharacter = (buildingId: string) => {
+      if (!sceneRef.current) return;
+      const building = useGameStore.getState().buildings.find((b) => b.id === buildingId);
+      if (!building) return;
+      const height = BUILDING_HEIGHTS[building.type];
+      placeCharacterOnBuilding(
+        sceneRef.current,
+        agentId,
+        building.position.col,
+        building.position.row,
+        height,
+      );
+    };
+
     if (currentPhase === 'assign') {
       const buildings = useGameStore.getState().buildings;
       const latestBuilding = buildings[buildings.length - 1];
       if (latestBuilding && !latestBuilding.agentId) {
         useAgentStore.getState().assignAgent(latestBuilding.id, agentId);
         useGameStore.getState().updateBuilding(latestBuilding.id, { agentId });
+        placeCharacter(latestBuilding.id);
         useGameStore.getState().setPhase('configure');
       }
     } else if (currentPhase === 'repair_assign') {
@@ -162,6 +187,7 @@ export default function App() {
       if (repairId) {
         useAgentStore.getState().assignAgent(repairId, agentId);
         useGameStore.getState().updateBuilding(repairId, { agentId });
+        placeCharacter(repairId);
         useGameStore.getState().setPhase('repair_configure');
       }
     }
@@ -270,7 +296,21 @@ export default function App() {
   }, []);
 
   const handleChangeAgent = useCallback(() => {
-    const currentPhase = useGameStore.getState().phase;
+    const state = useGameStore.getState();
+    const currentPhase = state.phase;
+
+    // Remove the character from the building when going back to select
+    if (sceneRef.current) {
+      const buildingId =
+        currentPhase === 'repair_configure'
+          ? state.repairBuildingId
+          : state.buildings[state.buildings.length - 1]?.id;
+      const building = state.buildings.find((b) => b.id === buildingId);
+      if (building) {
+        removeCharacterFromBuilding(sceneRef.current, building.position.col, building.position.row);
+      }
+    }
+
     if (currentPhase === 'configure') {
       useGameStore.getState().setPhase('assign');
     } else if (currentPhase === 'repair_configure') {
@@ -286,7 +326,13 @@ export default function App() {
     if (sceneRef.current) {
       const toRemove: THREE.Object3D[] = [];
       sceneRef.current.traverse((obj) => {
-        if (obj.userData?.type === 'building') toRemove.push(obj);
+        if (
+          obj.userData?.type === 'building' ||
+          obj.userData?.type === 'character' ||
+          obj.userData?.type === 'speech_bubble'
+        ) {
+          toRemove.push(obj);
+        }
       });
       toRemove.forEach((obj) => sceneRef.current!.remove(obj));
     }

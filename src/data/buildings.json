@@ -3,28 +3,28 @@
     "type": "hospital",
     "name": "Hospital",
     "cost": 150,
-    "color": "#F9A8D4",
+    "color": "#E8E8F0",
     "description": "Heals citizens and manages patient records"
   },
   {
     "type": "library",
     "name": "Library",
     "cost": 100,
-    "color": "#67D4E8",
+    "color": "#3B6B8C",
     "description": "Stores and retrieves knowledge for the city"
   },
   {
     "type": "transit",
     "name": "Transit Hub",
     "cost": 125,
-    "color": "#A78BFA",
+    "color": "#5C4B8A",
     "description": "Coordinates multi-step transportation routes"
   },
   {
     "type": "security",
     "name": "Security Tower",
     "cost": 175,
-    "color": "#FF8A80",
+    "color": "#8B3A3A",
     "description": "Monitors threats and enforces safety protocols"
   }
 ]
