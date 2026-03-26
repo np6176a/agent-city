@@ -1,5 +1,6 @@
 import { useAgentStore } from '../state/agentStore';
 import { useGameStore } from '../state/gameStore';
+import { RobotFace } from './RobotFace';
 
 interface AgentSelectProps {
   onConfirm: (agentId: string) => void;
@@ -58,6 +59,7 @@ export function AgentSelect({ onConfirm }: AgentSelectProps) {
         </h3>
         {agents.map((agent) => {
           const isSelected = selectedAgentId === agent.id;
+          const agentKey = agent.id as 'axel' | 'rue' | 'sentry';
           return (
             <button
               key={agent.id}
@@ -71,11 +73,7 @@ export function AgentSelect({ onConfirm }: AgentSelectProps) {
                 boxShadow: isSelected ? `0 0 16px ${agent.color}40` : 'none',
               }}
             >
-              <img
-                src={agent.portrait}
-                alt={agent.name}
-                className="w-16 h-16 object-contain drop-shadow-md"
-              />
+              <RobotFace agent={agentKey} expression="idle" size={80} />
               <span className="font-headline font-bold text-sm" style={{ color: agent.color }}>
                 {agent.name}
               </span>
