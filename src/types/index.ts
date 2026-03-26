@@ -1,5 +1,7 @@
 export type BuildingType = 'hospital' | 'library' | 'transit' | 'security';
 
+export type Difficulty = 'normal' | 'hard';
+
 export type GamePhase =
   | 'start'
   | 'place'
@@ -20,17 +22,52 @@ export type AgentName = 'Axel' | 'Rue' | 'Sentry';
 
 export type EventSeverity = 'minor' | 'major';
 
+export type ToolId =
+  | 'web_search'
+  | 'calculator'
+  | 'memory_bank'
+  | 'planner'
+  | 'code_executor'
+  | 'alert_system';
+
 export type FailureCause =
   | 'no_tools'
   | 'no_memory'
   | 'high_autonomy_no_guardrails'
   | 'wrong_agent'
-  | 'poor_fit';
+  | 'poor_fit'
+  | 'no_required_tool'
+  | 'no_search'
+  | 'no_calculator'
+  | 'no_planner'
+  | 'no_alert'
+  | 'no_code'
+  | 'memory_tool_mismatch';
 
-export interface AgentConfig {
+export interface NormalModeConfig {
+  mode: 'normal';
   tools: boolean;
   memory: boolean;
   autonomy: AutonomyLevel;
+}
+
+export interface HardModeConfig {
+  mode: 'hard';
+  tools: [ToolId, ToolId];
+  autonomy: AutonomyLevel;
+}
+
+export type AgentConfig = NormalModeConfig | HardModeConfig;
+
+export function isHardMode(config: AgentConfig): config is HardModeConfig {
+  return config.mode === 'hard';
+}
+
+export function getDefaultConfig(difficulty: Difficulty): AgentConfig {
+  if (difficulty === 'hard') {
+    return { mode: 'hard', tools: [] as unknown as [ToolId, ToolId], autonomy: 'medium' };
+  }
+  return { mode: 'normal', tools: false, memory: false, autonomy: 'medium' };
 }
 
 export interface GridTile {
@@ -58,12 +95,26 @@ export interface Agent {
   portrait: string;
   strengths: BuildingType[];
   weakness: BuildingType[];
+  affinityTools?: ToolId[];
   pronouns: string;
   tagline: string;
   motto: string;
   bio: string;
   personality: string[];
   reactions: Record<string, string>;
+}
+
+export interface Tool {
+  id: ToolId;
+  name: string;
+  description: string;
+  aiConcept: string;
+  icon: string;
+  memoryInteraction: {
+    withoutMemory: string;
+    withMemory: string;
+    memoryImportance: 'none' | 'helpful' | 'critical';
+  };
 }
 
 export interface GameEvent {
@@ -89,6 +140,6 @@ export interface TeachingCard {
   concept: string;
   explanation: string;
   whatWentWrong: string;
-  correctConfig: AgentConfig;
+  correctConfig: AgentConfig | Record<string, unknown>;
   diagnosisOptions?: DiagnosisOption[];
 }

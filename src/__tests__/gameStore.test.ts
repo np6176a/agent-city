@@ -12,7 +12,7 @@ function makePlacedBuilding(overrides: Partial<Building> = {}): Building {
     type: 'library',
     position: { col: 0, row: 0 },
     agentId: 'rue',
-    config: { tools: true, memory: true, autonomy: 'medium' },
+    config: { mode: 'normal', tools: true, memory: true, autonomy: 'medium' },
     status: 'idle',
     turnsActive: 0,
     ...overrides,

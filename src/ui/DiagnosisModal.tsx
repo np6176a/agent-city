@@ -176,15 +176,21 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
               </p>
             </div>
 
-            {!isSuccess && (
+            {!isSuccess && card.correctConfig && Object.keys(card.correctConfig).length > 0 && (
               <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)' }}>
                 <p className="text-xs mb-2 font-headline font-bold uppercase tracking-wider" style={{ color: 'var(--violet)' }}>
                   Ideal Config
                 </p>
                 <div className="flex gap-4 text-xs text-gray-300">
-                  <span>Tools: <strong style={{ color: card.correctConfig.tools ? 'var(--mint)' : 'var(--coral)' }}>{card.correctConfig.tools ? 'ON' : 'OFF'}</strong></span>
-                  <span>Memory: <strong style={{ color: card.correctConfig.memory ? 'var(--mint)' : 'var(--coral)' }}>{card.correctConfig.memory ? 'ON' : 'OFF'}</strong></span>
-                  <span>Autonomy: <strong style={{ color: 'var(--cyan)' }}>{card.correctConfig.autonomy}</strong></span>
+                  {'tools' in card.correctConfig && typeof card.correctConfig.tools === 'boolean' && (
+                    <span>Tools: <strong style={{ color: card.correctConfig.tools ? 'var(--mint)' : 'var(--coral)' }}>{card.correctConfig.tools ? 'ON' : 'OFF'}</strong></span>
+                  )}
+                  {'memory' in card.correctConfig && typeof card.correctConfig.memory === 'boolean' && (
+                    <span>Memory: <strong style={{ color: card.correctConfig.memory ? 'var(--mint)' : 'var(--coral)' }}>{card.correctConfig.memory ? 'ON' : 'OFF'}</strong></span>
+                  )}
+                  {'autonomy' in card.correctConfig && (
+                    <span>Autonomy: <strong style={{ color: 'var(--cyan)' }}>{String(card.correctConfig.autonomy)}</strong></span>
+                  )}
                 </div>
               </div>
             )}

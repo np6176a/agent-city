@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { useAgentStore } from '../state/agentStore';
 import { useEventStore } from '../state/eventStore';
 import { RobotFace } from './RobotFace';
-import type { AgentConfig, AutonomyLevel } from '../types';
+import { ToolPicker } from './ToolPicker';
+import { CompatPreview } from './CompatPreview';
+import buildingsData from '../data/buildings.json';
+import type { AgentConfig, AutonomyLevel, ToolId } from '../types';
 
 interface ConfigPanelProps {
   onConfirm: (config: AgentConfig) => void;
@@ -12,30 +15,44 @@ interface ConfigPanelProps {
 
 export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
   const phase = useGameStore((s) => s.phase);
+  const difficulty = useGameStore((s) => s.difficulty);
   const buildings = useGameStore((s) => s.buildings);
   const repairBuildingId = useGameStore((s) => s.repairBuildingId);
   const agents = useAgentStore((s) => s.agents);
   const eventHistory = useEventStore((s) => s.eventHistory);
+
+  // Normal mode state
   const [tools, setTools] = useState(false);
   const [memory, setMemory] = useState(false);
   const [autonomy, setAutonomy] = useState<AutonomyLevel>('medium');
 
+  // Hard mode state
+  const [selectedTools, setSelectedTools] = useState<ToolId[]>([]);
+
   const isVisible = phase === 'configure' || phase === 'repair_configure';
 
-  // Reset toggle state every time the panel becomes visible
   useEffect(() => {
     if (isVisible) {
       setTools(false);
       setMemory(false);
       setAutonomy('medium');
+      setSelectedTools([]);
     }
   }, [isVisible]);
+
+  const handleToolToggle = useCallback((toolId: ToolId) => {
+    setSelectedTools((prev) => {
+      if (prev.includes(toolId)) {
+        return prev.filter((t) => t !== toolId);
+      }
+      if (prev.length >= 2) return prev;
+      return [...prev, toolId];
+    });
+  }, []);
 
   if (!isVisible) return null;
 
   const isRepair = phase === 'repair_configure';
-
-  // Find the building and agent for context
   const building = isRepair
     ? buildings.find((b) => b.id === repairBuildingId)
     : buildings[buildings.length - 1];
@@ -44,7 +61,6 @@ export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
     ? agents.find((a) => a.id === building.agentId)
     : null;
 
-  // Find the previous failure for this building (repair mode)
   const previousFailure = isRepair && building
     ? eventHistory
         .filter((e) => e.buildingId === building.id && e.type === 'breakdown')
@@ -55,14 +71,39 @@ export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
     no_tools: 'had no tools and was guessing instead of looking things up',
     no_memory: 'had no memory and forgot the multi-step plan',
     high_autonomy_no_guardrails: 'had too much autonomy and overrode safety protocols',
-    poor_fit: 'had a configuration that didn\'t match the task requirements',
-    wrong_agent: 'wasn\'t the right fit for this type of building',
+    poor_fit: "had a configuration that didn't match the task requirements",
+    wrong_agent: "wasn't the right fit for this type of building",
+    no_required_tool: "didn't have any of the tools this building requires",
+    no_search: 'had no Web Search and relied on outdated information',
+    no_calculator: 'had no Calculator and estimated instead of computing',
+    no_planner: 'had no Planner and executed tasks without a plan',
+    no_alert: 'had no Alert System and missed threats',
+    memory_tool_mismatch: 'had a tool that needs Memory Bank to work properly',
+  };
+
+  const buildingDef = building
+    ? buildingsData.find((b) => b.type === building.type)
+    : null;
+
+  const isHard = difficulty === 'hard';
+  const canConfirmHard = selectedTools.length === 2;
+
+  const handleConfirm = () => {
+    if (isHard) {
+      onConfirm({
+        mode: 'hard',
+        tools: selectedTools as [ToolId, ToolId],
+        autonomy,
+      });
+    } else {
+      onConfirm({ mode: 'normal', tools, memory, autonomy });
+    }
   };
 
   return (
     <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/60">
       <div
-        className="border rounded-2xl p-6 w-80 flex flex-col gap-5"
+        className="border rounded-2xl p-6 w-80 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
         style={{
           backgroundColor: 'var(--bg-panel)',
           borderColor: isRepair
@@ -112,33 +153,52 @@ export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
           </div>
         )}
 
-        <label className="flex items-center justify-between text-sm text-gray-300">
-          <span>Tools Access</span>
-          <div
-            className="w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors"
-            style={{ backgroundColor: tools ? 'var(--mint)' : '#3d3d5c' }}
-            onClick={() => setTools(!tools)}
-          >
-            <div
-              className="w-4 h-4 rounded-full bg-white shadow transition-transform"
-              style={{ transform: tools ? 'translateX(24px)' : 'translateX(0)' }}
+        {isHard ? (
+          <>
+            <ToolPicker
+              selectedTools={selectedTools}
+              agentAffinityTools={(agent?.affinityTools ?? []) as ToolId[]}
+              onToggle={handleToolToggle}
             />
-          </div>
-        </label>
+            {building && buildingDef && (
+              <CompatPreview
+                selectedTools={selectedTools}
+                agentAffinityTools={(agent?.affinityTools ?? []) as ToolId[]}
+                requiredTools={buildingDef.requiredTools}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <label className="flex items-center justify-between text-sm text-gray-300">
+              <span>Tools Access</span>
+              <div
+                className="w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors"
+                style={{ backgroundColor: tools ? 'var(--mint)' : '#3d3d5c' }}
+                onClick={() => setTools(!tools)}
+              >
+                <div
+                  className="w-4 h-4 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: tools ? 'translateX(24px)' : 'translateX(0)' }}
+                />
+              </div>
+            </label>
 
-        <label className="flex items-center justify-between text-sm text-gray-300">
-          <span>Memory</span>
-          <div
-            className="w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors"
-            style={{ backgroundColor: memory ? 'var(--cyan)' : '#3d3d5c' }}
-            onClick={() => setMemory(!memory)}
-          >
-            <div
-              className="w-4 h-4 rounded-full bg-white shadow transition-transform"
-              style={{ transform: memory ? 'translateX(24px)' : 'translateX(0)' }}
-            />
-          </div>
-        </label>
+            <label className="flex items-center justify-between text-sm text-gray-300">
+              <span>Memory</span>
+              <div
+                className="w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors"
+                style={{ backgroundColor: memory ? 'var(--cyan)' : '#3d3d5c' }}
+                onClick={() => setMemory(!memory)}
+              >
+                <div
+                  className="w-4 h-4 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: memory ? 'translateX(24px)' : 'translateX(0)' }}
+                />
+              </div>
+            </label>
+          </>
+        )}
 
         <div className="flex flex-col gap-2">
           <span className="text-sm text-gray-300">Autonomy Level</span>
@@ -173,17 +233,29 @@ export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
         </button>
 
         <button
-          onClick={() => onConfirm({ tools, memory, autonomy })}
+          onClick={handleConfirm}
+          disabled={isHard && !canConfirmHard}
           className="py-2.5 rounded-2xl font-headline font-bold transition-all hover:scale-105"
           style={{
-            backgroundColor: isRepair ? 'var(--yellow)' : 'var(--mint)',
-            color: '#0F0F1A',
-            boxShadow: isRepair
-              ? '0 0 16px rgba(255, 209, 102, 0.3)'
-              : '0 0 16px rgba(94, 232, 176, 0.3)',
+            backgroundColor: isHard && !canConfirmHard
+              ? '#2d2d44'
+              : isRepair
+                ? 'var(--yellow)'
+                : 'var(--mint)',
+            color: isHard && !canConfirmHard ? '#666' : '#0F0F1A',
+            boxShadow: isHard && !canConfirmHard
+              ? 'none'
+              : isRepair
+                ? '0 0 16px rgba(255, 209, 102, 0.3)'
+                : '0 0 16px rgba(94, 232, 176, 0.3)',
+            cursor: isHard && !canConfirmHard ? 'not-allowed' : 'pointer',
           }}
         >
-          {isRepair ? 'Repair & Run' : 'Confirm & Run'}
+          {isHard && !canConfirmHard
+            ? 'Pick 2 Tools'
+            : isRepair
+              ? 'Repair & Run'
+              : 'Confirm & Run'}
         </button>
       </div>
     </div>

@@ -80,6 +80,84 @@
       "explanation": "You went back, diagnosed the problem, and fixed the configuration. That's exactly how real AI engineering works — iterate, learn from failures, and improve. Real engineers debug and repair.",
       "whatWentWrong": "",
       "correctConfig": { "tools": true, "memory": true, "autonomy": "medium" }
+    },
+    {
+      "id": "tc_no_search",
+      "title": "Don't Guess — Look It Up",
+      "concept": "tool_use",
+      "explanation": "Agents without search tools rely on training data alone, which can be outdated. RAG lets agents access current information in real time.",
+      "whatWentWrong": "The agent had no Web Search tool and relied on outdated training data to answer questions.",
+      "correctConfig": {},
+      "diagnosisOptions": [
+        { "id": "a", "text": "Add Web Search so the agent can look things up", "correct": true },
+        { "id": "b", "text": "Give the agent more autonomy", "correct": false },
+        { "id": "c", "text": "Switch to a different agent", "correct": false }
+      ]
+    },
+    {
+      "id": "tc_no_calculator",
+      "title": "Vibes-Based Math",
+      "concept": "tool_use",
+      "explanation": "LLMs are surprisingly bad at precise math. A calculator tool gives exact values instead of estimates.",
+      "whatWentWrong": "The agent estimated numerical values instead of computing them precisely.",
+      "correctConfig": {},
+      "diagnosisOptions": [
+        { "id": "a", "text": "Add Calculator for precise numerical reasoning", "correct": true },
+        { "id": "b", "text": "Add Memory Bank instead", "correct": false },
+        { "id": "c", "text": "Increase the autonomy level", "correct": false }
+      ]
+    },
+    {
+      "id": "tc_no_planner",
+      "title": "Ready, Fire, Aim",
+      "concept": "agent_architecture",
+      "explanation": "Without planning, agents do everything at once. Breaking work into steps is what separates agents from chatbots.",
+      "whatWentWrong": "The agent executed tasks without a plan, leading to chaos and missed steps.",
+      "correctConfig": {},
+      "diagnosisOptions": [
+        { "id": "a", "text": "Add Planner so the agent can break tasks into steps", "correct": true },
+        { "id": "b", "text": "Add Calculator instead", "correct": false },
+        { "id": "c", "text": "Switch to a different agent", "correct": false }
+      ]
+    },
+    {
+      "id": "tc_memory_tool_mismatch",
+      "title": "Tools Without Memory",
+      "concept": "context_memory",
+      "explanation": "Some tools are dramatically better with memory. Planner makes the plan — Memory Bank holds it. Alert System catches one anomaly — Memory Bank sees the pattern.",
+      "whatWentWrong": "A tool that needed memory to function properly was used without Memory Bank.",
+      "correctConfig": {},
+      "diagnosisOptions": [
+        { "id": "a", "text": "Swap one tool for Memory Bank — some tools need memory to work", "correct": true },
+        { "id": "b", "text": "Add a second copy of the same tool", "correct": false },
+        { "id": "c", "text": "Reduce the autonomy level", "correct": false }
+      ]
+    },
+    {
+      "id": "tc_no_required_tool",
+      "title": "Missing Critical Tools",
+      "concept": "tool_use",
+      "explanation": "Each building requires specific tools to function. Without at least one of the required tools, the agent can't perform the core tasks.",
+      "whatWentWrong": "The agent had none of the tools this building requires to operate.",
+      "correctConfig": {},
+      "diagnosisOptions": [
+        { "id": "a", "text": "This building needs specific tools — check what it requires", "correct": true },
+        { "id": "b", "text": "Give the agent more autonomy", "correct": false },
+        { "id": "c", "text": "Switch to a different agent", "correct": false }
+      ]
+    },
+    {
+      "id": "tc_no_alert",
+      "title": "No Eyes on the Watchtower",
+      "concept": "guardrails",
+      "explanation": "Security operations need an alert system to flag anomalies and escalate to human oversight. Without it, threats go undetected.",
+      "whatWentWrong": "The agent had no Alert System and couldn't flag suspicious activity.",
+      "correctConfig": {},
+      "diagnosisOptions": [
+        { "id": "a", "text": "Add Alert System to monitor for threats", "correct": true },
+        { "id": "b", "text": "Add Calculator instead", "correct": false },
+        { "id": "c", "text": "Increase autonomy to compensate", "correct": false }
+      ]
     }
   ]
 }

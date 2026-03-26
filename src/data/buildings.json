@@ -4,27 +4,61 @@
     "name": "Hospital",
     "cost": 150,
     "color": "#F0E6F6",
-    "description": "Heals citizens and manages patient records"
+    "description": "Heals citizens and manages patient records",
+    "requiredTools": ["web_search", "calculator"],
+    "idealCombo": ["web_search", "calculator"],
+    "memoryNeed": "low",
+    "failureMessages": {
+      "no_required_tool": "The hospital had no way to look up treatments or calculate dosages.",
+      "no_search": "Without Web Search, the agent relied on outdated training data.",
+      "no_calculator": "Dosage calculations were off — estimating instead of computing."
+    }
   },
   {
     "type": "library",
     "name": "Library",
     "cost": 100,
     "color": "#C8E8F8",
-    "description": "Stores and retrieves knowledge for the city"
+    "description": "Stores and retrieves knowledge for the city",
+    "requiredTools": ["web_search", "code_executor"],
+    "idealCombo": ["web_search", "memory_bank"],
+    "memoryNeed": "medium",
+    "failureMessages": {
+      "no_required_tool": "The library couldn't answer patron questions — no way to search or process data.",
+      "no_search": "Rue tried to answer from memory alone and gave confident but wrong answers.",
+      "memory_tool_mismatch": "Rue found great answers but couldn't connect them across related questions."
+    }
   },
   {
     "type": "transit",
     "name": "Transit Hub",
     "cost": 125,
     "color": "#D4C8F8",
-    "description": "Coordinates multi-step transportation routes"
+    "description": "Coordinates multi-step transportation routes",
+    "requiredTools": ["planner", "memory_bank"],
+    "idealCombo": ["planner", "memory_bank"],
+    "memoryNeed": "critical",
+    "failureMessages": {
+      "no_required_tool": "The transit system had no way to plan routes or remember schedules.",
+      "no_planner": "Routes ran simultaneously instead of being scheduled in order.",
+      "no_memory": "Axel planned a perfect route but forgot the first half while executing the second.",
+      "memory_tool_mismatch": "The Planner created steps, but without Memory Bank, step 3 forgot step 1."
+    }
   },
   {
     "type": "security",
     "name": "Security Tower",
     "cost": 175,
     "color": "#F8C8C0",
-    "description": "Monitors threats and enforces safety protocols"
+    "description": "Monitors threats and enforces safety protocols",
+    "requiredTools": ["alert_system", "memory_bank"],
+    "idealCombo": ["alert_system", "memory_bank"],
+    "memoryNeed": "critical",
+    "failureMessages": {
+      "no_required_tool": "The security tower had no way to detect threats or track incidents.",
+      "no_alert": "Sentry had no way to flag suspicious activity or escalate to humans.",
+      "no_memory": "Sentry caught each incident but couldn't see the pattern connecting them.",
+      "memory_tool_mismatch": "Alert System flagged one-off anomalies, but couldn't detect the escalating pattern."
+    }
   }
 ]

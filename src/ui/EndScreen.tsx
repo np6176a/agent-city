@@ -32,6 +32,7 @@ export function EndScreen({ onRestart }: EndScreenProps) {
     totalDiagnoses,
     repairsAttempted,
     perfectConfigs,
+    difficulty,
   } = useGameStore();
   const { eventHistory, seenConcepts } = useEventStore();
 
@@ -93,6 +94,18 @@ export function EndScreen({ onRestart }: EndScreenProps) {
           <p className="text-2xl font-headline font-bold" style={{ color: 'var(--violet)' }}>
             {rating.title}
           </p>
+          {difficulty === 'hard' && (
+            <span
+              className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-headline font-bold uppercase"
+              style={{
+                backgroundColor: 'rgba(167, 139, 250, 0.15)',
+                border: '1px solid rgba(167, 139, 250, 0.3)',
+                color: 'var(--violet)',
+              }}
+            >
+              Hard Mode
+            </span>
+          )}
           <p className="text-gray-400 text-sm mt-1">{rating.message}</p>
         </div>
 
