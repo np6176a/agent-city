@@ -7,15 +7,20 @@ const PHASE_LABELS: Record<string, string> = {
   resolve: 'Resolving...',
   feedback: 'Review Results',
   repair_select: 'Select a Building to Repair',
+  repair_assign: 'Reassign Agent',
   repair_configure: 'Reconfigure Agent',
 };
 
-export function HUD() {
+interface HUDProps {
+  onReset?: () => void;
+}
+
+export function HUD({ onReset }: HUDProps) {
   const { turn, score, budget, phase } = useGameStore();
 
   if (phase === 'start' || phase === 'end') return null;
 
-  const isRepair = phase === 'repair_select' || phase === 'repair_configure';
+  const isRepair = phase === 'repair_select' || phase === 'repair_assign' || phase === 'repair_configure';
 
   return (
     <>
@@ -43,8 +48,23 @@ export function HUD() {
             )}
           </span>
         </div>
-        <div className="text-sm font-headline font-semibold" style={{ color: 'var(--violet)' }}>
-          {PHASE_LABELS[phase] ?? ''}
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-headline font-semibold" style={{ color: 'var(--violet)' }}>
+            {PHASE_LABELS[phase] ?? ''}
+          </div>
+          {onReset && (
+            <button
+              onClick={onReset}
+              className="px-3 py-1 rounded-lg text-xs font-headline font-semibold transition-all hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255, 138, 128, 0.15)',
+                border: '1px solid rgba(255, 138, 128, 0.3)',
+                color: 'var(--coral)',
+              }}
+            >
+              Reset Game
+            </button>
+          )}
         </div>
       </div>
 

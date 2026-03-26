@@ -3,7 +3,10 @@ import * as THREE from 'three';
 import { createScene } from './game/Scene';
 import { createCamera, setupCameraControls } from './game/Camera';
 import { createGrid, highlightTile } from './game/Grid';
-import { createBuildingMesh } from './game/BuildingFactory';
+import { createBuildingMesh, animateBuildings } from './game/BuildingFactory';
+import { animateBuildingPopIn, animateSuccess, animateFailure } from './game/Animations';
+import { placeCharacterOnBuilding, animateCharacters, removeCharacterFromBuilding } from './game/CharacterFactory';
+import { updateRoads, animateRoads, clearRoads } from './game/RoadSystem';
 import { InputHandler } from './game/InputHandler';
 import { evaluateTurn } from './game/Evaluate';
 import { useGameStore, BUILDING_COSTS } from './state/gameStore';
@@ -18,7 +21,14 @@ import { TeachingPopup } from './ui/TeachingPopup';
 import { StartScreen } from './ui/StartScreen';
 import { EndScreen } from './ui/EndScreen';
 import eventsData from './data/events.json';
-import type { AgentConfig, TeachingCard } from './types';
+import type { AgentConfig, BuildingType, TeachingCard } from './types';
+
+const BUILDING_HEIGHTS: Record<BuildingType, number> = {
+  hospital: 1.2,
+  library: 0.9,
+  transit: 0.7,
+  security: 1.6,
+};
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,7 +97,7 @@ export default function App() {
           );
           if (!building) return;
           useGameStore.getState().setRepairBuilding(building.id);
-          useGameStore.getState().setPhase('repair_configure');
+          useGameStore.getState().setPhase('repair_assign');
           return;
         }
 
@@ -115,15 +125,29 @@ export default function App() {
 
         const mesh = createBuildingMesh(state.selectedBuildingType, col, row);
         scene.add(mesh);
+        animateBuildingPopIn(mesh);
 
         useGameStore.getState().placeBuilding(building);
+
+        // Update road network (connects buildings to transit hub)
+        const updatedBuildings = useGameStore.getState().buildings;
+        updateRoads(scene, updatedBuildings);
+
         useGameStore.getState().setPhase('assign');
       },
     });
 
+    const clock = new THREE.Clock();
+    let lastElapsed = 0;
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = elapsed - lastElapsed;
+      lastElapsed = elapsed;
+      animateBuildings(scene, elapsed);
+      animateCharacters(scene, elapsed);
+      animateRoads(elapsed, delta);
       renderer.render(scene, camera);
     };
     animate();
@@ -142,30 +166,44 @@ export default function App() {
     };
   }, []);
 
-  // Handle agent assignment
-  useEffect(() => {
-    if (phase !== 'assign') return;
+  const handleAgentConfirm = useCallback((agentId: string) => {
+    const currentPhase = useGameStore.getState().phase;
 
-    const unsub = useAgentStore.subscribe((state) => {
-      if (state.selectedAgentId && useGameStore.getState().phase === 'assign') {
-        const buildings = useGameStore.getState().buildings;
-        const latestBuilding = buildings[buildings.length - 1];
-        if (latestBuilding && !latestBuilding.agentId) {
-          useAgentStore
-            .getState()
-            .assignAgent(latestBuilding.id, state.selectedAgentId);
-          useGameStore
-            .getState()
-            .updateBuilding(latestBuilding.id, {
-              agentId: state.selectedAgentId,
-            });
-          useGameStore.getState().setPhase('configure');
-        }
+    const placeCharacter = (buildingId: string) => {
+      if (!sceneRef.current) return;
+      const building = useGameStore.getState().buildings.find((b) => b.id === buildingId);
+      if (!building) return;
+      const height = BUILDING_HEIGHTS[building.type];
+      placeCharacterOnBuilding(
+        sceneRef.current,
+        agentId,
+        building.position.col,
+        building.position.row,
+        height,
+      );
+    };
+
+    if (currentPhase === 'assign') {
+      const buildings = useGameStore.getState().buildings;
+      const latestBuilding = buildings[buildings.length - 1];
+      if (latestBuilding && !latestBuilding.agentId) {
+        useAgentStore.getState().assignAgent(latestBuilding.id, agentId);
+        useGameStore.getState().updateBuilding(latestBuilding.id, { agentId });
+        placeCharacter(latestBuilding.id);
+        useGameStore.getState().setPhase('configure');
       }
-    });
+    } else if (currentPhase === 'repair_assign') {
+      const repairId = useGameStore.getState().repairBuildingId;
+      if (repairId) {
+        useAgentStore.getState().assignAgent(repairId, agentId);
+        useGameStore.getState().updateBuilding(repairId, { agentId });
+        placeCharacter(repairId);
+        useGameStore.getState().setPhase('repair_configure');
+      }
+    }
 
-    return unsub;
-  }, [phase]);
+    useAgentStore.getState().selectAgent(null);
+  }, []);
 
   const handleConfigConfirm = useCallback((config: AgentConfig) => {
     const state = useGameStore.getState();
@@ -191,6 +229,15 @@ export default function App() {
     const agent = agents.find((a) => a.id === building.agentId)!;
 
     const event = evaluateTurn(building, agent, isRepair, state.turn);
+
+    // Trigger 3D animations
+    if (sceneRef.current) {
+      if (event.type === 'success') {
+        animateSuccess(sceneRef.current, building.position.col, building.position.row);
+      } else {
+        animateFailure(sceneRef.current, building.position.col, building.position.row);
+      }
+    }
 
     if (event.type === 'success') {
       if (isRepair) {
@@ -258,14 +305,45 @@ export default function App() {
     useGameStore.getState().advanceTurn();
   }, []);
 
+  const handleChangeAgent = useCallback(() => {
+    const state = useGameStore.getState();
+    const currentPhase = state.phase;
+
+    // Remove the character from the building when going back to select
+    if (sceneRef.current) {
+      const buildingId =
+        currentPhase === 'repair_configure'
+          ? state.repairBuildingId
+          : state.buildings[state.buildings.length - 1]?.id;
+      const building = state.buildings.find((b) => b.id === buildingId);
+      if (building) {
+        removeCharacterFromBuilding(sceneRef.current, building.position.col, building.position.row);
+      }
+    }
+
+    if (currentPhase === 'configure') {
+      useGameStore.getState().setPhase('assign');
+    } else if (currentPhase === 'repair_configure') {
+      useGameStore.getState().setPhase('repair_assign');
+    }
+    useAgentStore.getState().selectAgent(null);
+  }, []);
+
   const handleRestart = useCallback(() => {
     resetGame();
     useAgentStore.getState().resetAssignments();
     useEventStore.getState().resetEvents();
     if (sceneRef.current) {
+      clearRoads(sceneRef.current);
       const toRemove: THREE.Object3D[] = [];
       sceneRef.current.traverse((obj) => {
-        if (obj.userData?.type === 'building') toRemove.push(obj);
+        if (
+          obj.userData?.type === 'building' ||
+          obj.userData?.type === 'character' ||
+          obj.userData?.type === 'speech_bubble'
+        ) {
+          toRemove.push(obj);
+        }
       });
       toRemove.forEach((obj) => sceneRef.current!.remove(obj));
     }
@@ -277,10 +355,10 @@ export default function App() {
       <div className="pointer-events-none fixed inset-0 z-10 [&>*]:pointer-events-auto">
         {phase === 'start' && <StartScreen onStart={startGame} />}
         {phase === 'end' && <EndScreen onRestart={handleRestart} />}
-        <HUD />
+        <HUD onReset={handleRestart} />
         <BuildPanel />
-        <AgentSelect />
-        <ConfigPanel onConfirm={handleConfigConfirm} />
+        <AgentSelect onConfirm={handleAgentConfirm} />
+        <ConfigPanel onConfirm={handleConfigConfirm} onChangeAgent={handleChangeAgent} />
         <DiagnosisModal onContinue={handleDiagnosisContinue} />
         <TeachingPopup />
       </div>

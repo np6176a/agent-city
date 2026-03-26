@@ -8,6 +8,7 @@ export type GamePhase =
   | 'resolve'
   | 'feedback'
   | 'repair_select'
+  | 'repair_assign'
   | 'repair_configure'
   | 'end';
 
@@ -57,6 +58,12 @@ export interface Agent {
   portrait: string;
   strengths: BuildingType[];
   weakness: BuildingType[];
+  pronouns: string;
+  tagline: string;
+  motto: string;
+  bio: string;
+  personality: string[];
+  reactions: Record<string, string>;
 }
 
 export interface GameEvent {

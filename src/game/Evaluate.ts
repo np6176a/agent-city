@@ -90,6 +90,11 @@ export function evaluateTurn(
     return failEvent(building, agent, 'high_autonomy_no_guardrails', isRepair);
   }
 
+  // Configuration bonuses: reward good agent setup
+  if (config.tools) score += 5;
+  if (config.memory) score += 5;
+  if (config.autonomy === 'medium') score += 5;
+
   // Randomized variance: ±5 for repairs (more forgiving), ±15 for normal
   const variance = isRepair ? 5 : 15;
   score += Math.floor(Math.random() * variance * 2) - variance;

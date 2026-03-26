@@ -76,6 +76,16 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
           </div>
         </div>
 
+        {/* Agent reaction line */}
+        {agent && (
+          <p
+            className="text-sm italic leading-relaxed"
+            style={{ color: agent.color }}
+          >
+            "{agent.reactions[currentEvent.cause] ?? agent.reactions['poor_fit']}"
+          </p>
+        )}
+
         {/* Explanation */}
         <p className="text-gray-300 text-sm leading-relaxed">
           {isSuccess ? card.explanation : card.whatWentWrong}
