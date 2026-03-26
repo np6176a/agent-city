@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useEventStore } from '../state/eventStore';
 import { useAgentStore } from '../state/agentStore';
+import { RobotFace } from './RobotFace';
+import type { Expression } from '../game/faces/types';
 import eventsData from '../data/events.json';
 import type { TeachingCard, DiagnosisOption } from '../types';
 
@@ -59,11 +61,10 @@ export function DiagnosisModal({ onContinue }: DiagnosisModalProps) {
         {/* Header with agent */}
         <div className="flex items-center gap-3">
           {agent && (
-            <img
-              src={agent.portrait}
-              alt={agent.name}
-              className="w-12 h-12 rounded-xl object-contain"
-              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+            <RobotFace
+              agent={agent.id as 'axel' | 'rue' | 'sentry'}
+              expression={(isSuccess ? 'happy' : hasAnswered ? (isCorrect ? 'happy' : 'worried') : 'broken') as Expression}
+              size={80}
             />
           )}
           <div>

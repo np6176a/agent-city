@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { useAgentStore } from '../state/agentStore';
 import { useEventStore } from '../state/eventStore';
+import { RobotFace } from './RobotFace';
 import type { AgentConfig, AutonomyLevel } from '../types';
 
 interface ConfigPanelProps {
@@ -75,11 +76,10 @@ export function ConfigPanel({ onConfirm, onChangeAgent }: ConfigPanelProps) {
         {/* Agent + Building context */}
         {agent && building && (
           <div className="flex items-center gap-3">
-            <img
-              src={agent.portrait}
-              alt={agent.name}
-              className="w-12 h-12 rounded-xl object-contain"
-              style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+            <RobotFace
+              agent={agent.id as 'axel' | 'rue' | 'sentry'}
+              expression="thinking"
+              size={64}
             />
             <div>
               <span className="font-headline font-bold text-sm" style={{ color: agent.color }}>
