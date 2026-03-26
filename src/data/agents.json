@@ -20,7 +20,14 @@
       "no_memory": "I had a plan. A really good plan. I just... where did it go?",
       "high_autonomy_no_guardrails": "That... was not in the plan.",
       "wrong_agent": "I calculated a 12% chance I was the right choice. I should have mentioned that.",
-      "poor_fit": "That... was not in the plan."
+      "poor_fit": "That... was not in the plan.",
+      "no_search": "I needed data. Real data. Not... whatever I just made up.",
+      "no_calculator": "I estimated. I NEVER estimate. The margin of error is unacceptable.",
+      "no_planner": "You sent me in without a planner? I had no steps. NO STEPS.",
+      "no_alert": "There were warnings I should have caught. I had no way to flag them.",
+      "no_required_tool": "I checked my toolkit and it was... not the right toolkit.",
+      "memory_tool_mismatch": "I made the plan, but I forgot it halfway through. The tools need memory to work.",
+      "no_code": "I needed to run computations but had no way to execute them."
     }
   },
   {
@@ -44,7 +51,14 @@
       "no_memory": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see.",
       "high_autonomy_no_guardrails": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see.",
       "wrong_agent": "I mean, I TRIED. But this really isn't my thing. At all.",
-      "poor_fit": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see."
+      "poor_fit": "Oh no oh no — wait, let me look up what went wrong — oh. Oh I see.",
+      "no_search": "No search?! I was just making things up! I VIBRATE when I find real data and I did NOT vibrate once!",
+      "no_calculator": "The numbers were... vibes. I was doing vibes-based math. That's not a thing!",
+      "no_planner": "I did everything at once! All of it! At the same time! It was chaos and I loved it but also it failed!",
+      "no_alert": "Something was wrong and I had no way to flag it! I just had to... watch it happen!",
+      "no_required_tool": "I showed up without the right tools and honestly? I should have said something sooner.",
+      "memory_tool_mismatch": "I found amazing stuff but then I forgot what I found three seconds later! The tools need memory!",
+      "no_code": "I needed to run code but I had no executor! I was just... imagining the output!"
     }
   },
   {
@@ -68,7 +82,14 @@
       "no_memory": "I knew it. I had a bad feeling. I always have a bad feeling but THIS TIME I was right.",
       "high_autonomy_no_guardrails": "You took away my alerts?? How am I supposed to — I can't even — this is a safety violation.",
       "wrong_agent": "I appreciate the confidence but I am NOT qualified for this and I said so in my pre-assignment risk assessment that nobody read.",
-      "poor_fit": "I knew it. I had a bad feeling. I always have a bad feeling but THIS TIME I was right."
+      "poor_fit": "I knew it. I had a bad feeling. I always have a bad feeling but THIS TIME I was right.",
+      "no_search": "I couldn't look anything up. I was operating on outdated intel. That is... not safe.",
+      "no_calculator": "The numbers were approximate. APPROXIMATE. In a safety context. I need to file an incident report about this.",
+      "no_planner": "There was no plan. No sequence. No checklist. I bumped into three walls. This is a safety hazard.",
+      "no_alert": "I had no alert system. Threats were happening and I couldn't even beep. I NEED to beep.",
+      "no_required_tool": "I showed up without the proper equipment. This violates at least four of my internal safety protocols.",
+      "memory_tool_mismatch": "I caught the first incident but then forgot about it. The pattern was RIGHT THERE and I couldn't see it.",
+      "no_code": "I needed to process data but had no way to run scripts. Manual analysis only goes so far."
     }
   }
 ]
