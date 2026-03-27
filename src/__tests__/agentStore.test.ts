@@ -61,6 +61,32 @@ describe('agentStore', () => {
     });
   });
 
+  describe('unassignAgent', () => {
+    it('removes the assignment for a building', () => {
+      getState().assignAgent('bld_1', 'axel');
+      getState().assignAgent('bld_2', 'rue');
+      getState().unassignAgent('bld_1');
+      expect(getState().assignments.has('bld_1')).toBe(false);
+      expect(getState().assignments.get('bld_2')).toBe('rue');
+    });
+
+    it('does not affect other assignments', () => {
+      getState().assignAgent('bld_1', 'axel');
+      getState().assignAgent('bld_2', 'rue');
+      getState().assignAgent('bld_3', 'sentry');
+      getState().unassignAgent('bld_2');
+      expect(getState().assignments.size).toBe(2);
+      expect(getState().assignments.get('bld_1')).toBe('axel');
+      expect(getState().assignments.get('bld_3')).toBe('sentry');
+    });
+
+    it('is a no-op for a non-existent building', () => {
+      getState().assignAgent('bld_1', 'axel');
+      getState().unassignAgent('bld_999');
+      expect(getState().assignments.size).toBe(1);
+    });
+  });
+
   describe('resetAssignments', () => {
     it('clears all assignments', () => {
       getState().assignAgent('bld_1', 'axel');

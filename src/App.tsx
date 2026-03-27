@@ -331,6 +331,16 @@ export default function App() {
       }
     }
 
+    // Clear the agentId from the building so re-assignment can proceed
+    const buildingId =
+      currentPhase === 'repair_configure'
+        ? state.repairBuildingId
+        : state.buildings[state.buildings.length - 1]?.id;
+    if (buildingId) {
+      useGameStore.getState().updateBuilding(buildingId, { agentId: null });
+      useAgentStore.getState().unassignAgent(buildingId);
+    }
+
     if (currentPhase === 'configure') {
       useGameStore.getState().setPhase('assign');
     } else if (currentPhase === 'repair_configure') {
