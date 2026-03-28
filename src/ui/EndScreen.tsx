@@ -1,5 +1,6 @@
 import { useGameStore } from '../state/gameStore';
 import { useEventStore } from '../state/eventStore';
+import type { FailureCause } from '../types';
 
 interface EndScreenProps {
   onRestart: () => void;
@@ -22,6 +23,54 @@ const CONCEPT_LABELS: Record<string, { label: string; color: string }> = {
   iteration: { label: 'Iteration', color: 'var(--yellow)' },
 };
 
+/** Maps failure causes to short, player-facing takeaways. */
+const LESSON_TAKEAWAYS: Partial<Record<FailureCause, { lesson: string; concept: string }>> = {
+  wrong_agent: {
+    lesson: 'Each agent has strengths and weaknesses — match the agent to the task.',
+    concept: 'task_specialization',
+  },
+  no_tools: {
+    lesson: 'Agents without tools are just guessing. Tools let them look things up and act on real data.',
+    concept: 'tool_use',
+  },
+  no_memory: {
+    lesson: 'Multi-step tasks need memory. Without it, agents forget their own plan halfway through.',
+    concept: 'context_memory',
+  },
+  high_autonomy_no_guardrails: {
+    lesson: 'High autonomy on critical tasks is risky. Guardrails and human oversight keep agents safe.',
+    concept: 'guardrails',
+  },
+  no_search: {
+    lesson: "Without search, agents rely on stale training data. RAG keeps answers current.",
+    concept: 'tool_use',
+  },
+  no_calculator: {
+    lesson: "LLMs can't do precise math alone. A calculator tool turns estimates into exact answers.",
+    concept: 'tool_use',
+  },
+  no_planner: {
+    lesson: "Planning breaks work into steps. Without it, agents do everything at once — badly.",
+    concept: 'agent_architecture',
+  },
+  no_alert: {
+    lesson: "Safety-critical tasks need an alert system to flag threats and escalate to humans.",
+    concept: 'guardrails',
+  },
+  no_required_tool: {
+    lesson: 'Some buildings need specific tools to function. Check requirements before configuring.',
+    concept: 'tool_use',
+  },
+  memory_tool_mismatch: {
+    lesson: "Some tools need memory to be effective. Planner without Memory Bank forgets its own steps.",
+    concept: 'context_memory',
+  },
+  poor_fit: {
+    lesson: 'A well-configured agent needs the right tools, memory, and autonomy working together.',
+    concept: 'agent_architecture',
+  },
+};
+
 export function EndScreen({ onRestart }: EndScreenProps) {
   const {
     score,
@@ -40,6 +89,20 @@ export function EndScreen({ onRestart }: EndScreenProps) {
   const failures = eventHistory.filter((e) => e.type === 'breakdown').length;
   const rating = RATINGS.find((r) => score >= r.min && score <= r.max) ?? RATINGS[0];
   const hadRepair = eventHistory.some((e) => e.isRepair && e.type === 'success');
+
+  // Deduplicate lessons from failures — one per unique cause
+  const failureCauses = eventHistory
+    .filter((e): e is typeof e & { cause: FailureCause } =>
+      e.type === 'breakdown' && e.cause !== 'success',
+    )
+    .reduce<FailureCause[]>(
+      (acc, e) => (acc.includes(e.cause) ? acc : [...acc, e.cause]),
+      [],
+    );
+
+  const lessons = failureCauses
+    .map((cause) => LESSON_TAKEAWAYS[cause])
+    .filter((l): l is NonNullable<typeof l> => l !== undefined);
 
   // Build positive message for early end
   const conceptsList = [...seenConcepts]
@@ -117,6 +180,59 @@ export function EndScreen({ onRestart }: EndScreenProps) {
           <StatCard value={`${correctDiagnoses}/${totalDiagnoses}`} label="Diagnoses" color="var(--yellow)" />
           <StatCard value={repairsAttempted} label="Repairs" color="var(--coral)" />
           <StatCard value={perfectConfigs} label="Perfect Configs" color="var(--mint)" />
+        </div>
+
+        {/* Recap — what you learned */}
+        <div className="w-full">
+          <p className="text-xs font-headline uppercase tracking-widest text-gray-500 mb-3">
+            What You Learned
+          </p>
+          <div
+            className="rounded-2xl p-4 text-left"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+            }}
+          >
+            <p className="text-sm text-gray-300 leading-relaxed mb-3">
+              You succeeded <span className="font-bold" style={{ color: 'var(--mint)' }}>{successes} time{successes !== 1 ? 's' : ''}</span>
+              {failures > 0
+                ? <>{' '}and hit <span className="font-bold" style={{ color: 'var(--coral)' }}>{failures} breakdown{failures !== 1 ? 's' : ''}</span>. Here's what you learned about agents:</>
+                : <>. Flawless! Here's what you proved about agents:</>
+              }
+            </p>
+
+            {lessons.length > 0 ? (
+              <div className="flex flex-col gap-2.5">
+                {lessons.map((l) => {
+                  const conceptMeta = CONCEPT_LABELS[l.concept];
+                  return (
+                    <div key={l.lesson} className="flex items-start gap-2.5">
+                      {conceptMeta && (
+                        <span
+                          className="shrink-0 mt-0.5 w-2 h-2 rounded-full"
+                          style={{ backgroundColor: conceptMeta.color }}
+                        />
+                      )}
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        {l.lesson}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 leading-relaxed italic">
+                No breakdowns — you matched every agent to the right task with the right config. That's real agent engineering.
+              </p>
+            )}
+
+            {hadRepair && (
+              <p className="text-xs text-gray-500 leading-relaxed mt-3 italic">
+                You also went back and repaired a broken building — real engineers debug and iterate.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Concepts learned */}
