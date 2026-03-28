@@ -9,6 +9,7 @@ interface AgentState {
 
   selectAgent: (agentId: string | null) => void;
   assignAgent: (buildingId: string, agentId: string) => void;
+  unassignAgent: (buildingId: string) => void;
   resetAssignments: () => void;
 }
 
@@ -24,6 +25,13 @@ export const useAgentStore = create<AgentState>((set) => ({
       const assignments = new Map(state.assignments);
       assignments.set(buildingId, agentId);
       return { assignments, selectedAgentId: null };
+    }),
+
+  unassignAgent: (buildingId) =>
+    set((state) => {
+      const assignments = new Map(state.assignments);
+      assignments.delete(buildingId);
+      return { assignments };
     }),
 
   resetAssignments: () => set({ assignments: new Map() }),

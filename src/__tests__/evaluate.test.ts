@@ -8,7 +8,7 @@ function makeBuilding(overrides: Partial<Building> = {}): Building {
     type: 'library',
     position: { col: 0, row: 0 },
     agentId: 'rue',
-    config: { tools: true, memory: true, autonomy: 'medium' },
+    config: { mode: 'normal', tools: true, memory: true, autonomy: 'medium' },
     status: 'idle',
     turnsActive: 0,
     ...overrides,
@@ -67,7 +67,7 @@ describe('evaluateTurn', () => {
   describe('instant fail conditions', () => {
     it('fails with no_tools when Rue has tools OFF', () => {
       const building = makeBuilding({
-        config: { tools: false, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: false, memory: true, autonomy: 'medium' },
       });
       const agent = makeAgent();
       const event = evaluateTurn(building, agent);
@@ -80,7 +80,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'security',
         agentId: 'sentry',
-        config: { tools: false, memory: true, autonomy: 'low' },
+        config: { mode: 'normal', tools: false, memory: true, autonomy: 'low' },
       });
       const event = evaluateTurn(building, sentry);
       expect(event.type).toBe('breakdown');
@@ -91,7 +91,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'hospital',
         agentId: 'sentry',
-        config: { tools: false, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: false, memory: true, autonomy: 'medium' },
       });
       // Sentry only needs tools for security; on hospital it should not instant-fail for no_tools
       const event = evaluateTurn(building, sentry);
@@ -102,7 +102,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'transit',
         agentId: 'axel',
-        config: { tools: true, memory: false, autonomy: 'medium' },
+        config: { mode: 'normal', tools: true, memory: false, autonomy: 'medium' },
       });
       const event = evaluateTurn(building, axel);
       expect(event.type).toBe('breakdown');
@@ -114,7 +114,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'hospital',
         agentId: 'axel',
-        config: { tools: true, memory: false, autonomy: 'medium' },
+        config: { mode: 'normal', tools: true, memory: false, autonomy: 'medium' },
       });
       const event = evaluateTurn(building, axel);
       expect(event.cause).not.toBe('no_memory');
@@ -124,7 +124,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'security',
         agentId: 'sentry',
-        config: { tools: true, memory: true, autonomy: 'high' },
+        config: { mode: 'normal', tools: true, memory: true, autonomy: 'high' },
       });
       const event = evaluateTurn(building, sentry);
       expect(event.type).toBe('breakdown');
@@ -135,7 +135,7 @@ describe('evaluateTurn', () => {
     it('does NOT fail high autonomy on non-security buildings', () => {
       const building = makeBuilding({
         type: 'library',
-        config: { tools: true, memory: true, autonomy: 'high' },
+        config: { mode: 'normal', tools: true, memory: true, autonomy: 'high' },
       });
       const agent = makeAgent();
       const event = evaluateTurn(building, agent);
@@ -149,7 +149,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'library',
         agentId: 'sentry',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: true, memory: true, autonomy: 'medium' },
       });
       const event = evaluateTurn(building, sentry);
       expect(event.cause).toBe('wrong_agent');
@@ -162,7 +162,7 @@ describe('evaluateTurn', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0.5); // variance = 0
       const building = makeBuilding({
         type: 'library',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: true, memory: true, autonomy: 'medium' },
       });
       const agent = makeAgent(); // Rue, strengths: library
       const event = evaluateTurn(building, agent);
@@ -180,7 +180,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'hospital',
         agentId: 'axel',
-        config: { tools: false, memory: false, autonomy: 'low' },
+        config: { mode: 'normal', tools: false, memory: false, autonomy: 'low' },
       });
       // Axel: no strength or weakness for hospital. score: 50 + 0 (no config bonus) - 15 = 35 < 50
       const event = evaluateTurn(building, axel);
@@ -196,7 +196,7 @@ describe('evaluateTurn', () => {
       const building = makeBuilding({
         type: 'hospital',
         agentId: 'axel',
-        config: { tools: false, memory: false, autonomy: 'low' },
+        config: { mode: 'normal', tools: false, memory: false, autonomy: 'low' },
       });
       // score: 50 + 0 (no config bonus) - 5 = 45 < 50 → fail
       const repairEvent = evaluateTurn(building, axel, true);
@@ -220,14 +220,14 @@ describe('evaluateTurn', () => {
       // Rue on library (strength match): score 50 + 25 = 75 ≥ 60 → success
       const libraryBuilding = makeBuilding({
         type: 'library',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: true, memory: true, autonomy: 'medium' },
       });
       const event7 = evaluateTurn(libraryBuilding, makeAgent(), false, 7);
       expect(event7.type).toBe('success');
 
       // Axel on hospital (no match, no config bonus): score 50 + 0 = 50 < 60 → fail on turn 7
       const event7fail = evaluateTurn(
-        makeBuilding({ type: 'hospital', config: { tools: false, memory: false, autonomy: 'low' } }),
+        makeBuilding({ type: 'hospital', config: { mode: 'normal', tools: false, memory: false, autonomy: 'low' } }),
         axel,
         false,
         7,
@@ -240,7 +240,7 @@ describe('evaluateTurn', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0.5);
       const building = makeBuilding({
         type: 'hospital',
-        config: { tools: true, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: true, memory: true, autonomy: 'medium' },
       });
       // Axel on hospital: score 50 ≥ 50 → success on turn 6
       const event6 = evaluateTurn(building, axel, false, 6);
@@ -252,7 +252,7 @@ describe('evaluateTurn', () => {
   describe('event metadata', () => {
     it('sets severity to major for instant-fail causes', () => {
       const building = makeBuilding({
-        config: { tools: false, memory: true, autonomy: 'medium' },
+        config: { mode: 'normal', tools: false, memory: true, autonomy: 'medium' },
       });
       const event = evaluateTurn(building, makeAgent());
       expect(event.severity).toBe('major');
@@ -262,7 +262,7 @@ describe('evaluateTurn', () => {
       vi.spyOn(Math, 'random').mockReturnValue(0);
       const building = makeBuilding({
         type: 'hospital',
-        config: { tools: false, memory: false, autonomy: 'low' },
+        config: { mode: 'normal', tools: false, memory: false, autonomy: 'low' },
       });
       // score: 50 + 0 (no config bonus) - 15 = 35 < 50 → poor_fit
       const event = evaluateTurn(building, axel);

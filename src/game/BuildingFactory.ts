@@ -234,6 +234,54 @@ export function createBuildingMesh(
 }
 
 /**
+ * Add a pulsing orange ring around a broken building to indicate it can be repaired.
+ */
+export function addRepairIndicator(scene: THREE.Scene, col: number, row: number): void {
+  // Avoid duplicates
+  const existing = findRepairIndicator(scene, col, row);
+  if (existing) return;
+
+  const ringGeo = new THREE.RingGeometry(0.52, 0.58, 48);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xff9933,
+    transparent: true,
+    opacity: 0.7,
+    side: THREE.DoubleSide,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(col, 0.06, row);
+  ring.userData = { type: 'repair_indicator', col, row, animate: 'repair_pulse' };
+  scene.add(ring);
+}
+
+/**
+ * Remove the repair indicator ring from a building.
+ */
+export function removeRepairIndicator(scene: THREE.Scene, col: number, row: number): void {
+  const ring = findRepairIndicator(scene, col, row);
+  if (ring) {
+    scene.remove(ring);
+    (ring as THREE.Mesh).geometry.dispose();
+    ((ring as THREE.Mesh).material as THREE.Material).dispose();
+  }
+}
+
+function findRepairIndicator(scene: THREE.Scene, col: number, row: number): THREE.Object3D | null {
+  let found: THREE.Object3D | null = null;
+  scene.traverse((obj) => {
+    if (
+      obj.userData?.type === 'repair_indicator' &&
+      obj.userData.col === col &&
+      obj.userData.row === row
+    ) {
+      found = obj;
+    }
+  });
+  return found;
+}
+
+/**
  * Animate all building idle effects. Call once per frame with elapsed time.
  */
 export function animateBuildings(scene: THREE.Scene, time: number): void {
@@ -276,6 +324,14 @@ export function animateBuildings(scene: THREE.Scene, time: number): void {
         const light = obj as THREE.PointLight;
         light.intensity = 0.6 + Math.sin(time * 2) * 0.3;
         light.position.y = (obj.userData.baseY as number) + Math.sin(time * 2) * 0.04;
+        break;
+      }
+
+      // Gentle pulsing orange repair indicator
+      case 'repair_pulse': {
+        const mesh = obj as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshBasicMaterial;
+        mat.opacity = 0.4 + Math.sin(time * 2.5) * 0.3;
         break;
       }
     }

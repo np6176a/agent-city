@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { Building, BuildingType, GamePhase, GridTile } from '../types';
+import type { Building, BuildingType, Difficulty, GamePhase, GridTile } from '../types';
 
 interface GameState {
+  difficulty: Difficulty;
   turn: number;
   score: number;
   budget: number;
@@ -19,6 +20,7 @@ interface GameState {
   perfectConfigs: number;
   turnsPlayed: number;
 
+  setDifficulty: (difficulty: Difficulty) => void;
   setPhase: (phase: GamePhase) => void;
   selectBuildingType: (type: BuildingType | null) => void;
   selectTile: (tile: { col: number; row: number } | null) => void;
@@ -77,6 +79,7 @@ export function routeNextPhase(state: GameState): GamePhase {
 }
 
 export const useGameStore = create<GameState>((set) => ({
+  difficulty: 'normal',
   turn: 1,
   score: 0,
   budget: 500,
@@ -93,6 +96,8 @@ export const useGameStore = create<GameState>((set) => ({
   repairsAttempted: 0,
   perfectConfigs: 0,
   turnsPlayed: 0,
+
+  setDifficulty: (difficulty) => set({ difficulty }),
 
   setPhase: (phase) => set({ phase }),
 
@@ -168,6 +173,7 @@ export const useGameStore = create<GameState>((set) => ({
 
   resetGame: () =>
     set({
+      difficulty: 'normal',
       turn: 1,
       score: 0,
       budget: 500,

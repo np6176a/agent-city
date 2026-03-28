@@ -1,0 +1,74 @@
+[
+  {
+    "id": "web_search",
+    "name": "Web Search",
+    "description": "Look up external information in real time",
+    "aiConcept": "Retrieval-Augmented Generation (RAG)",
+    "icon": "search-globe",
+    "memoryInteraction": {
+      "withoutMemory": "Finds answers but forgets them. Each lookup starts fresh.",
+      "withMemory": "Finds answers AND builds knowledge. Cross-references past searches.",
+      "memoryImportance": "helpful"
+    }
+  },
+  {
+    "id": "calculator",
+    "name": "Calculator",
+    "description": "Precise numerical reasoning — budgets, dosages, distances",
+    "aiConcept": "Tool use for structured reasoning",
+    "icon": "calculator",
+    "memoryInteraction": {
+      "withoutMemory": "Works fine. Math is stateless.",
+      "withMemory": "No meaningful difference.",
+      "memoryImportance": "none"
+    }
+  },
+  {
+    "id": "memory_bank",
+    "name": "Memory Bank",
+    "description": "Store and recall information across steps within a task",
+    "aiConcept": "Context window and persistent memory",
+    "icon": "brain-save",
+    "memoryInteraction": {
+      "withoutMemory": "N/A",
+      "withMemory": "N/A",
+      "memoryImportance": "none"
+    }
+  },
+  {
+    "id": "planner",
+    "name": "Planner",
+    "description": "Break complex tasks into ordered sub-steps before executing",
+    "aiConcept": "Chain-of-thought reasoning, task decomposition",
+    "icon": "clipboard-list",
+    "memoryInteraction": {
+      "withoutMemory": "Creates a plan but loses track during execution. Steps get skipped or repeated.",
+      "withMemory": "Creates a plan AND follows through. Each completed step informs the next.",
+      "memoryImportance": "critical"
+    }
+  },
+  {
+    "id": "code_executor",
+    "name": "Code Executor",
+    "description": "Write and run scripts to automate tasks and process data",
+    "aiConcept": "Code interpreter, sandbox execution",
+    "icon": "terminal",
+    "memoryInteraction": {
+      "withoutMemory": "Writes code but can't iterate. If it fails, starts over from scratch.",
+      "withMemory": "Writes code, remembers errors, debugs iteratively.",
+      "memoryImportance": "helpful"
+    }
+  },
+  {
+    "id": "alert_system",
+    "name": "Alert System",
+    "description": "Flag anomalies, send warnings, escalate to human oversight",
+    "aiConcept": "Guardrails, confidence thresholds, human-in-the-loop",
+    "icon": "shield-alert",
+    "memoryInteraction": {
+      "withoutMemory": "Catches obvious one-time anomalies only. No pattern recognition.",
+      "withMemory": "Detects escalating patterns over time. Dramatically better threat detection.",
+      "memoryImportance": "critical"
+    }
+  }
+]
