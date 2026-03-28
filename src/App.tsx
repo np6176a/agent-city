@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { createScene } from './game/Scene';
 import { createCamera, setupCameraControls } from './game/Camera';
 import { createGrid, highlightTile } from './game/Grid';
-import { createBuildingMesh, animateBuildings } from './game/BuildingFactory';
+import { createBuildingMesh, animateBuildings, addRepairIndicator, removeRepairIndicator } from './game/BuildingFactory';
 import { animateBuildingPopIn, animateSuccess, animateFailure } from './game/Animations';
 import { placeCharacterOnBuilding, animateCharacters, removeCharacterFromBuilding } from './game/CharacterFactory';
 import { updateRoads, animateRoads, clearRoads } from './game/RoadSystem';
@@ -258,6 +258,11 @@ export default function App() {
       }
       useGameStore.getState().updateBuilding(building.id, { status: 'success' });
 
+      // Remove repair indicator if this was a successful repair
+      if (isRepair && sceneRef.current) {
+        removeRepairIndicator(sceneRef.current, building.position.col, building.position.row);
+      }
+
       // Check for perfect config (right agent + all correct settings)
       const isPerfect = isHardMode(config)
         ? agent.strengths.includes(building.type) && config.tools.length === 2
@@ -275,6 +280,11 @@ export default function App() {
         useGameStore.getState().addScore(-25);
       }
       useGameStore.getState().updateBuilding(building.id, { status: 'broken' });
+
+      // Show pulsing orange outline on the broken building
+      if (sceneRef.current) {
+        addRepairIndicator(sceneRef.current, building.position.col, building.position.row);
+      }
     }
 
     // Track concept
@@ -360,7 +370,8 @@ export default function App() {
         if (
           obj.userData?.type === 'building' ||
           obj.userData?.type === 'character' ||
-          obj.userData?.type === 'speech_bubble'
+          obj.userData?.type === 'speech_bubble' ||
+          obj.userData?.type === 'repair_indicator'
         ) {
           toRemove.push(obj);
         }
