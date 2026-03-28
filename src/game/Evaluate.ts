@@ -7,32 +7,35 @@ import type {
   GameEvent,
   HardModeConfig,
   NormalModeConfig,
+  Tool,
   ToolId,
 } from '../types';
 import buildingsData from '../data/buildings.json';
 import toolsData from '../data/tools.json';
 
 interface BuildingDef {
-  type: string;
-  requiredTools: string[];
-  idealCombo: string[];
+  type: BuildingType;
+  requiredTools: ToolId[];
+  idealCombo: ToolId[];
   memoryNeed: string;
-  failureMessages: Record<string, string>;
+  failureMessages: Partial<Record<FailureCause, string>>;
 }
 
-interface ToolDef {
-  id: string;
-  memoryInteraction: {
-    memoryImportance: string;
-  };
-}
+// JSON imports are typed loosely by TS; these casts align them with our strict
+// interfaces. The shapes are validated by the JSON files themselves.
+const buildingDefs = buildingsData as ReadonlyArray<BuildingDef>;
+const toolDefs = toolsData as ReadonlyArray<Tool>;
 
 function getBuildingDef(type: BuildingType): BuildingDef {
-  return buildingsData.find((b) => b.type === type)! as unknown as BuildingDef;
+  const def = buildingDefs.find((b) => b.type === type);
+  if (!def) throw new Error(`No building definition for type: ${type}`);
+  return def;
 }
 
-function getToolDef(id: ToolId): ToolDef {
-  return toolsData.find((t) => t.id === id)! as ToolDef;
+function getToolDef(id: ToolId): Tool {
+  const def = toolDefs.find((t) => t.id === id);
+  if (!def) throw new Error(`No tool definition for id: ${id}`);
+  return def;
 }
 
 function needsTools(buildingType: BuildingType, agent: Agent): boolean {
@@ -102,15 +105,18 @@ function evaluateNormalMode(
   isRepair: boolean,
   currentTurn: number,
 ): GameEvent {
-  const config = building.config as NormalModeConfig;
-  let score = 50;
+  const config = building.config as NormalModeConfig; // narrowing: caller guarantees normal mode
+  const baseScore = 50;
 
   // Agent fit bonus/penalty
-  if (agent.strengths.includes(building.type)) score += 25;
-  if (agent.weakness.includes(building.type)) score -= 30;
+  const fitScore = agent.strengths.includes(building.type)
+    ? 25
+    : agent.weakness.includes(building.type)
+      ? -30
+      : 0;
 
   // Wrong agent: weakness match with a significant penalty
-  if (agent.weakness.includes(building.type) && score < 30) {
+  if (agent.weakness.includes(building.type) && baseScore + fitScore < 30) {
     return failEvent(building, agent, 'wrong_agent', isRepair);
   }
 
@@ -130,13 +136,17 @@ function evaluateNormalMode(
   }
 
   // Configuration bonuses
-  if (config.tools) score += 5;
-  if (config.memory) score += 5;
-  if (config.autonomy === 'medium') score += 5;
+  const configScore = [
+    config.tools ? 5 : 0,
+    config.memory ? 5 : 0,
+    config.autonomy === 'medium' ? 5 : 0,
+  ].reduce((sum, v) => sum + v, 0);
 
   // Randomized variance
   const variance = isRepair ? 5 : 15;
-  score += Math.floor(Math.random() * variance * 2) - variance;
+  const randomOffset = Math.floor(Math.random() * variance * 2) - variance;
+
+  const score = baseScore + fitScore + configScore + randomOffset;
 
   // Turns 7-8: harder threshold
   const threshold = currentTurn >= 7 ? 60 : 50;
@@ -146,33 +156,30 @@ function evaluateNormalMode(
     : failEvent(building, agent, 'poor_fit', isRepair);
 }
 
+// Maps required tool IDs to their specific failure causes
+const toolFailureCauseMap: Record<string, FailureCause> = {
+  web_search: 'no_search',
+  calculator: 'no_calculator',
+  planner: 'no_planner',
+  alert_system: 'no_alert',
+  memory_bank: 'no_memory',
+  code_executor: 'no_code',
+};
+
 function determineCause(
   building: Building,
   agent: Agent,
   tools: [ToolId, ToolId],
 ): FailureCause {
   const def = getBuildingDef(building.type);
-  if (def.requiredTools.includes('web_search') && !tools.includes('web_search'))
-    return 'no_search';
-  if (def.requiredTools.includes('calculator') && !tools.includes('calculator'))
-    return 'no_calculator';
-  if (def.requiredTools.includes('planner') && !tools.includes('planner'))
-    return 'no_planner';
-  if (
-    def.requiredTools.includes('alert_system') &&
-    !tools.includes('alert_system')
-  )
-    return 'no_alert';
-  if (
-    def.requiredTools.includes('memory_bank') &&
-    !tools.includes('memory_bank')
-  )
-    return 'no_memory';
-  if (
-    def.requiredTools.includes('code_executor') &&
-    !tools.includes('code_executor')
-  )
-    return 'no_code';
+
+  // Find the first required tool that is missing and has a specific failure cause
+  const missingToolCause = def.requiredTools
+    .filter((reqTool) => !tools.includes(reqTool))
+    .map((reqTool) => toolFailureCauseMap[reqTool])
+    .find((cause) => cause !== undefined);
+
+  if (missingToolCause) return missingToolCause;
   if (agent.weakness.includes(building.type)) return 'wrong_agent';
   return 'poor_fit';
 }
@@ -183,26 +190,27 @@ function evaluateHardMode(
   isRepair: boolean,
   currentTurn: number,
 ): GameEvent {
-  const config = building.config as HardModeConfig;
+  const config = building.config as HardModeConfig; // narrowing: caller guarantees hard mode
   const tools = config.tools;
   const buildingDef = getBuildingDef(building.type);
   const hasMemory = tools.includes('memory_bank');
-  let score = 50;
+  const baseScore = 50;
 
   // 1. Agent-building fit
-  if (agent.strengths.includes(building.type)) score += 20;
-  if (agent.weakness.includes(building.type)) score -= 25;
+  const fitScore = agent.strengths.includes(building.type)
+    ? 20
+    : agent.weakness.includes(building.type)
+      ? -25
+      : 0;
 
   // Wrong agent: weakness match with a significant penalty
-  if (agent.weakness.includes(building.type) && score < 30) {
+  if (agent.weakness.includes(building.type) && baseScore + fitScore < 30) {
     return failEvent(building, agent, 'wrong_agent', isRepair);
   }
 
   // 2. Agent-tool affinity (+10 per match)
   const affinityTools = agent.affinityTools ?? [];
-  for (const tool of tools) {
-    if (affinityTools.includes(tool)) score += 10;
-  }
+  const affinityScore = tools.filter((tool) => affinityTools.includes(tool)).length * 10;
 
   // 3. Required tool check (instant fail if NONE present)
   const hasRequired = tools.some((t) =>
@@ -213,29 +221,32 @@ function evaluateHardMode(
   }
 
   // 4. Specific tool absence penalty
-  for (const reqTool of buildingDef.requiredTools) {
-    if (!tools.includes(reqTool as ToolId)) score -= 15;
-  }
+  const missingToolPenalty = buildingDef.requiredTools
+    .filter((reqTool) => !tools.includes(reqTool))
+    .length * -15;
 
   // 5. Memory interaction
-  for (const tool of tools) {
-    if (tool === 'memory_bank') continue;
-    const toolDef = getToolDef(tool);
-    const importance = toolDef.memoryInteraction.memoryImportance;
+  const memoryResult = tools
+    .filter((tool) => tool !== 'memory_bank')
+    .reduce<{ score: number; fail: FailureCause | null }>((acc, tool) => {
+      if (acc.fail) return acc;
+      const importance = getToolDef(tool).memoryInteraction.memoryImportance;
+      if (importance === 'critical' && !hasMemory) {
+        return { score: acc.score, fail: 'memory_tool_mismatch' };
+      }
+      if (importance === 'helpful' && hasMemory) {
+        return { score: acc.score + 10, fail: null };
+      }
+      return acc;
+    }, { score: 0, fail: null });
 
-    if (importance === 'critical' && !hasMemory) {
-      return failEvent(building, agent, 'memory_tool_mismatch', isRepair);
-    }
-    if (importance === 'helpful' && hasMemory) {
-      score += 10;
-    }
+  if (memoryResult.fail) {
+    return failEvent(building, agent, memoryResult.fail, isRepair);
   }
 
   // 6. Ideal combo bonus
   const [ideal1, ideal2] = buildingDef.idealCombo;
-  if (tools.includes(ideal1 as ToolId) && tools.includes(ideal2 as ToolId)) {
-    score += 20;
-  }
+  const idealComboScore = (tools.includes(ideal1) && tools.includes(ideal2)) ? 20 : 0;
 
   // 7. Autonomy check
   if (config.autonomy === 'high' && building.type === 'security') {
@@ -244,16 +255,18 @@ function evaluateHardMode(
 
   // 8. Random variance
   const variance = isRepair ? 5 : 15;
-  score += Math.floor(Math.random() * variance * 2) - variance;
+  const randomOffset = Math.floor(Math.random() * variance * 2) - variance;
 
   // 9. Turns 7-8: harder threshold
   const threshold = currentTurn >= 7 ? 60 : 50;
 
   // 10. Result
-  if (score >= threshold) {
-    return successEvent(building, agent, isRepair);
-  }
-  return failEvent(building, agent, determineCause(building, agent, tools), isRepair);
+  const score = baseScore + fitScore + affinityScore + missingToolPenalty +
+    memoryResult.score + idealComboScore + randomOffset;
+
+  return score >= threshold
+    ? successEvent(building, agent, isRepair)
+    : failEvent(building, agent, determineCause(building, agent, tools), isRepair);
 }
 
 export function evaluateTurn(
