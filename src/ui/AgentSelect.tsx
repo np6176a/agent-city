@@ -1,6 +1,14 @@
 import { useAgentStore } from '../state/agentStore';
 import { useGameStore } from '../state/gameStore';
 import { RobotFace } from './RobotFace';
+import type { BuildingType } from '../types';
+
+const BUILDING_LABELS: Record<BuildingType, string> = {
+  hospital: 'Hospital',
+  library: 'Library',
+  transit: 'Transit Hub',
+  security: 'Security Tower',
+};
 
 interface AgentSelectProps {
   onConfirm: (agentId: string) => void;
@@ -8,11 +16,26 @@ interface AgentSelectProps {
 
 export function AgentSelect({ onConfirm }: AgentSelectProps) {
   const phase = useGameStore((s) => s.phase);
+  const buildings = useGameStore((s) => s.buildings);
+  const repairBuildingId = useGameStore((s) => s.repairBuildingId);
   const { agents, selectedAgentId, selectAgent } = useAgentStore();
 
   if (phase !== 'assign' && phase !== 'repair_assign') return null;
 
   const selectedAgent = agents.find((a) => a.id === selectedAgentId);
+
+  // Determine the building type being assigned
+  const currentBuildingId = phase === 'repair_assign'
+    ? repairBuildingId
+    : buildings[buildings.length - 1]?.id;
+  const currentBuildingType = buildings.find((b) => b.id === currentBuildingId)?.type ?? null;
+
+  const isWeakness = (agentWeakness: BuildingType[]) =>
+    currentBuildingType !== null && agentWeakness.includes(currentBuildingType);
+
+  const selectedIsMismatch = selectedAgent !== undefined
+    && currentBuildingType !== null
+    && isWeakness(selectedAgent.weakness);
 
   return (
     <div className="fixed right-4 top-1/2 -translate-y-1/2 z-10 flex gap-3">
@@ -46,6 +69,22 @@ export function AgentSelect({ onConfirm }: AgentSelectProps) {
           <span className="text-gray-600 text-[10px] mt-1">
             {selectedAgent.pronouns}
           </span>
+
+          {/* Mismatch warning */}
+          {selectedIsMismatch && currentBuildingType && (
+            <div
+              className="mt-2 rounded-xl border px-3 py-2.5 text-xs leading-relaxed"
+              style={{
+                borderColor: 'rgba(255, 138, 128, 0.4)',
+                backgroundColor: 'rgba(255, 138, 128, 0.08)',
+                color: '#FF8A80',
+              }}
+            >
+              <span className="font-bold">Heads up:</span>{' '}
+              {selectedAgent.name} struggles with {BUILDING_LABELS[currentBuildingType]} tasks.
+              {' '}This isn't their strength — consider a different agent.
+            </div>
+          )}
         </div>
       )}
 
@@ -60,6 +99,7 @@ export function AgentSelect({ onConfirm }: AgentSelectProps) {
         {agents.map((agent) => {
           const isSelected = selectedAgentId === agent.id;
           const agentKey = agent.id as 'axel' | 'rue' | 'sentry';
+          const weakForBuilding = isWeakness(agent.weakness);
           return (
             <button
               key={agent.id}
@@ -81,6 +121,18 @@ export function AgentSelect({ onConfirm }: AgentSelectProps) {
               <span className="text-gray-500 text-[10px] italic">
                 {agent.tagline}
               </span>
+              {/* Weakness tag when this agent is weak for the current building */}
+              {weakForBuilding && currentBuildingType && (
+                <span
+                  className="text-[10px] font-bold rounded-full px-2 py-0.5 mt-0.5"
+                  style={{
+                    color: '#FF8A80',
+                    backgroundColor: 'rgba(255, 138, 128, 0.12)',
+                  }}
+                >
+                  Weak vs {BUILDING_LABELS[currentBuildingType]}
+                </span>
+              )}
             </button>
           );
         })}
